@@ -114,24 +114,23 @@ body {
 }
 
 /* ============================================
-   SCROLLBAR (Clean)
+   SCROLLBAR (Hidden)
    ============================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+html,
+body {
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE/Edge */
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-text-muted);
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* ============================================

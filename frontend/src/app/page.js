@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
@@ -100,57 +101,72 @@ const KRITERIA = [
 ];
 
 export default function HomePage() {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start']
+  });
+
+  // Parallax transforms for the hero image
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.25]);
+  const imageY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.8], [0.45, 0.85]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
   return (
     <>
       <Navbar />
       <main>
         {/* ==========================================
-            HERO SECTION
+            HERO SECTION - Full Background Image with Parallax
            ========================================== */}
-        <section style={{
-          position: 'relative',
-          minHeight: '90vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '60px 24px',
-          overflow: 'hidden',
-          background: 'linear-gradient(180deg, var(--color-bg) 0%, var(--color-primary-50) 50%, var(--color-bg) 100%)'
-        }}>
-          {/* Floating decorative circles */}
+        <section
+          ref={heroRef}
+          style={{
+            position: 'relative',
+            height: 'calc(100vh - 70px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '60px 24px',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Background Image with Parallax */}
           <motion.div
-            animate={{ y: [-20, 20, -20], x: [-10, 10, -10] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
             style={{
-              position: 'absolute', top: '15%', left: '10%',
-              width: '120px', height: '120px', borderRadius: '50%',
-              background: 'radial-gradient(circle, var(--color-primary-200) 0%, transparent 70%)',
-              opacity: 0.4, filter: 'blur(20px)'
+              position: 'absolute',
+              inset: 0,
+              zIndex: 0,
+              scale: imageScale,
+              y: imageY
             }}
-          />
-          <motion.div
-            animate={{ y: [15, -25, 15], x: [10, -15, 10] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              position: 'absolute', bottom: '20%', right: '12%',
-              width: '160px', height: '160px', borderRadius: '50%',
-              background: 'radial-gradient(circle, var(--color-primary-300) 0%, transparent 70%)',
-              opacity: 0.3, filter: 'blur(30px)'
-            }}
-          />
-          <motion.div
-            animate={{ y: [10, -15, 10] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-            style={{
-              position: 'absolute', top: '30%', right: '25%',
-              width: '80px', height: '80px', borderRadius: '50%',
-              background: 'radial-gradient(circle, var(--color-primary-100) 0%, transparent 70%)',
-              opacity: 0.5, filter: 'blur(15px)'
-            }}
-          />
+          >
+            <Image
+              src="/Sapi-Landing Page.jpg"
+              alt="Sapi Qurban Berkualitas - PT Ghaffar Farm Bersaudara"
+              fill
+              priority
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+            />
+          </motion.div>
 
-          <div style={{ maxWidth: '700px', position: 'relative', zIndex: 1 }}>
+          {/* Dark gradient overlay - darkens on scroll */}
+          <motion.div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.6) 100%)',
+            zIndex: 1,
+            opacity: overlayOpacity
+          }} />
+
+          {/* Content on top of image - fades & slides up on scroll */}
+          <motion.div style={{ maxWidth: '750px', position: 'relative', zIndex: 2, y: contentY, opacity: contentOpacity }}>
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -161,12 +177,13 @@ export default function HomePage() {
                 display: 'inline-block',
                 padding: '6px 16px',
                 borderRadius: '999px',
-                backgroundColor: 'var(--color-primary-100)',
-                color: 'var(--color-primary-700)',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: '#ffffff',
                 fontSize: '13px',
                 fontWeight: 600,
                 marginBottom: '24px',
-                border: '1px solid var(--color-primary-200)'
+                border: '1px solid rgba(255,255,255,0.25)',
+                backdropFilter: 'blur(8px)'
               }}>
                 🐄 PT Ghaffar Farm Bersaudara — Since 2012
               </span>
@@ -178,16 +195,17 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
               style={{
-                fontSize: 'clamp(32px, 5vw, 52px)',
+                fontSize: 'clamp(34px, 5.5vw, 56px)',
                 fontWeight: 800,
                 lineHeight: 1.15,
-                color: 'var(--color-text)',
-                marginBottom: '20px'
+                color: '#ffffff',
+                marginBottom: '20px',
+                textShadow: '0 2px 20px rgba(0,0,0,0.3)'
               }}
             >
               Sistem Penunjang Keputusan{' '}
               <span style={{
-                background: 'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%)',
+                background: 'linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
@@ -203,15 +221,16 @@ export default function HomePage() {
               transition={{ duration: 0.7, delay: 0.6 }}
               style={{
                 fontSize: '17px',
-                color: 'var(--color-text-secondary)',
+                color: 'rgba(255,255,255,0.85)',
                 lineHeight: 1.7,
                 marginBottom: '36px',
-                maxWidth: '560px',
-                margin: '0 auto 36px'
+                maxWidth: '580px',
+                margin: '0 auto 36px',
+                textShadow: '0 1px 8px rgba(0,0,0,0.2)'
               }}
             >
               Pilih sapi qurban berkualitas yang dinilai secara transparan menggunakan
-              metode <strong>SAW</strong> (Simple Additive Weighting) dengan 6 kriteria penilaian profesional.
+              metode <strong style={{ color: '#ffffff' }}>SAW</strong> (Simple Additive Weighting) dengan 6 kriteria penilaian profesional.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -229,7 +248,7 @@ export default function HomePage() {
                 textDecoration: 'none',
                 fontSize: '15px',
                 fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
+                boxShadow: '0 4px 20px rgba(14, 165, 233, 0.4)',
                 transition: 'all 0.3s ease'
               }}>
                 Lihat Katalog Sapi →
@@ -237,19 +256,19 @@ export default function HomePage() {
               <Link href="/cek-pemesanan" style={{
                 padding: '14px 32px',
                 borderRadius: 'var(--radius-md)',
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--color-bg-card)',
-                color: 'var(--color-text)',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                color: '#ffffff',
                 textDecoration: 'none',
                 fontSize: '15px',
                 fontWeight: 600,
                 transition: 'all 0.3s ease',
-                boxShadow: 'var(--shadow-sm)'
+                backdropFilter: 'blur(8px)'
               }}>
                 Cek Pemesanan
               </Link>
             </motion.div>
-          </div>
+          </motion.div>
         </section>
 
         {/* ==========================================
