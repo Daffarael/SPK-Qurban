@@ -1,6 +1,7 @@
 'use client';
 
-export default function KartuStatistik({ icon, label, nilai, warna = 'var(--color-primary-500)' }) {
+export default function KartuStatistik({ icon, label, nilai, value, warna = 'var(--color-primary-500)' }) {
+    const displayValue = nilai ?? value ?? 0;
     return (
         <div style={{
             backgroundColor: 'var(--color-bg-card)',
@@ -50,7 +51,7 @@ export default function KartuStatistik({ icon, label, nilai, warna = 'var(--colo
                     color: 'var(--color-text)',
                     lineHeight: 1.2
                 }}>
-                    {nilai}
+                    {displayValue}
                 </div>
             </div>
         </div>

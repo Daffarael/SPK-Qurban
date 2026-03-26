@@ -108,6 +108,23 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                             <BadgeGrade grade={sapi.grade} size="sm" />
                         </div>
 
+                        {/* Jenis Sapi */}
+                        {sapi.jenisSapi && (
+                            <div style={{
+                                display: 'inline-block',
+                                padding: '3px 10px',
+                                borderRadius: '999px',
+                                backgroundColor: 'var(--color-primary-50)',
+                                color: 'var(--color-primary-700)',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                marginBottom: '10px',
+                                border: '1px solid var(--color-primary-100)'
+                            }}>
+                                🏷️ {sapi.jenisSapi.nama}
+                            </div>
+                        )}
+
                         {/* Score Bar */}
                         <div style={{ marginBottom: '12px' }}>
                             <div style={{

@@ -26,6 +26,7 @@ const db = {};
 db.Admin = require('./Admin')(sequelize);
 db.Sapi = require('./Sapi')(sequelize);
 db.Pemesanan = require('./Pemesanan')(sequelize);
+db.JenisSapi = require('./JenisSapi')(sequelize);
 
 // ========================
 // RELASI ANTAR MODEL
@@ -41,6 +42,18 @@ db.Sapi.hasMany(db.Pemesanan, {
 db.Pemesanan.belongsTo(db.Sapi, {
   foreignKey: 'sapi_id',
   as: 'sapi'
+});
+
+// JenisSapi memiliki banyak Sapi
+db.JenisSapi.hasMany(db.Sapi, {
+  foreignKey: 'jenis_sapi_id',
+  as: 'daftarSapi'
+});
+
+// Sapi milik satu JenisSapi
+db.Sapi.belongsTo(db.JenisSapi, {
+  foreignKey: 'jenis_sapi_id',
+  as: 'jenisSapi'
 });
 
 // ========================

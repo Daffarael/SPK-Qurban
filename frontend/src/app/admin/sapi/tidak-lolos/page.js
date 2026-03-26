@@ -133,8 +133,8 @@ export default function SapiTidakLolosPage() {
                                 justifyContent: 'space-between',
                                 alignItems: 'center'
                             }}>
-                                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>
-                                    🐄 {sapi.kode_sapi}
+                                <span style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>
+                                    {sapi.kode_sapi}
                                 </span>
                                 <span style={{
                                     padding: '3px 10px',

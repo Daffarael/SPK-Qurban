@@ -181,8 +181,8 @@ export default function DaftarSapiPage() {
                                         }}>
                                             {idx + 1}
                                         </div>
-                                        <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>
-                                            🐄 {sapi.kode_sapi}
+                                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>
+                                            {sapi.kode_sapi}
                                         </span>
                                     </div>
                                     <BadgeGrade grade={sapi.grade} size="sm" />

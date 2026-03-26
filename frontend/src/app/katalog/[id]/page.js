@@ -264,6 +264,23 @@ export default function DetailSapiPage() {
                                 <BadgeGrade grade={sapi.grade} />
                             </div>
 
+                            {/* Jenis Sapi */}
+                            {sapi.jenisSapi && (
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '5px 14px',
+                                    borderRadius: '999px',
+                                    backgroundColor: 'var(--color-primary-50)',
+                                    color: 'var(--color-primary-700)',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    marginBottom: '16px',
+                                    border: '1px solid var(--color-primary-100)'
+                                }}>
+                                    🏷️ {sapi.jenisSapi.nama}
+                                </div>
+                            )}
+
                             {/* SAW Score */}
                             <div style={{
                                 textAlign: 'center',
@@ -295,7 +312,7 @@ export default function DetailSapiPage() {
                                 display: 'grid',
                                 gridTemplateColumns: '1fr 1fr',
                                 gap: '12px',
-                                marginBottom: '20px'
+                                marginBottom: '12px'
                             }}>
                                 <div style={{
                                     padding: '14px',
@@ -320,6 +337,21 @@ export default function DetailSapiPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Jenis Sapi Info Box */}
+                            {sapi.jenisSapi && (
+                                <div style={{
+                                    padding: '14px',
+                                    backgroundColor: 'var(--color-bg-secondary)',
+                                    borderRadius: 'var(--radius-md)',
+                                    marginBottom: '20px'
+                                }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>Jenis/Ras Sapi</div>
+                                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>
+                                        {sapi.jenisSapi.nama}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Status */}
                             {sapi.status !== 'Available' ? (

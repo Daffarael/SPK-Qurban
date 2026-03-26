@@ -1,6 +1,6 @@
 /**
  * Multer Config - Upload Foto Sapi
- * Validasi: max 5MB, hanya jpg/jpeg/png/webp
+ * Validasi: max 20MB, hanya jpg/jpeg/png/webp
  */
 
 const multer = require('multer');
@@ -34,7 +34,7 @@ const uploadFoto = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // Max 5MB
+        fileSize: 20 * 1024 * 1024 // Max 20MB
     }
 });
 

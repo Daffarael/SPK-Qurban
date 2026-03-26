@@ -174,18 +174,23 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <span style={{
-                display: 'inline-block',
-                padding: '6px 16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 20px',
                 borderRadius: '999px',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
+                background: 'rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.95)',
                 fontSize: '13px',
-                fontWeight: 600,
+                fontWeight: 500,
                 marginBottom: '24px',
-                border: '1px solid rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(8px)'
+                border: '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(12px)',
+                letterSpacing: '0.3px'
               }}>
-                🐄 PT Ghaffar Farm Bersaudara — Since 2012
+                <span style={{ fontWeight: 700 }}>PT Ghaffar Farm Bersaudara</span>
+                <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)' }} />
+                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Est. 2012</span>
               </span>
             </motion.div>
 

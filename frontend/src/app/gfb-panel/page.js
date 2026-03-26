@@ -26,6 +26,13 @@ export default function LoginPage() {
     };
 
     return (
+        <>
+        <style jsx global>{`
+            .login-input::placeholder {
+                color: #64748b !important;
+                opacity: 1 !important;
+            }
+        `}</style>
         <div style={{
             minHeight: '100vh',
             display: 'flex',
@@ -106,7 +113,7 @@ export default function LoginPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.35 }}
-                        style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)', marginTop: '16px' }}
+                        style={{ fontSize: '22px', fontWeight: 800, color: '#1e293b', marginTop: '16px', letterSpacing: '-0.3px' }}
                     >
                         Panel Admin
                     </motion.h1>
@@ -114,7 +121,7 @@ export default function LoginPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.45 }}
-                        style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}
+                        style={{ fontSize: '14px', color: '#475569', marginTop: '6px', fontWeight: 500 }}
                     >
                         PT Ghaffar Farm Bersaudara
                     </motion.p>
@@ -148,10 +155,11 @@ export default function LoginPage() {
                         transition={{ delay: 0.5 }}
                         style={{ marginBottom: '16px' }}
                     >
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                             Username
                         </label>
                         <input
+                            className="login-input"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -162,7 +170,7 @@ export default function LoginPage() {
                                 borderRadius: 'var(--radius-md)',
                                 border: '1px solid var(--color-border)',
                                 backgroundColor: 'rgba(255,255,255,0.7)',
-                                color: 'var(--color-text)', fontSize: '14px', outline: 'none',
+                                color: '#1e293b', fontSize: '14px', outline: 'none',
                                 transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
                             }}
                             onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary-400)'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.1)'; }}
@@ -176,10 +184,11 @@ export default function LoginPage() {
                         transition={{ delay: 0.6 }}
                         style={{ marginBottom: '24px' }}
                     >
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                             Password
                         </label>
                         <input
+                            className="login-input"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -190,7 +199,7 @@ export default function LoginPage() {
                                 borderRadius: 'var(--radius-md)',
                                 border: '1px solid var(--color-border)',
                                 backgroundColor: 'rgba(255,255,255,0.7)',
-                                color: 'var(--color-text)', fontSize: '14px', outline: 'none',
+                                color: '#1e293b', fontSize: '14px', outline: 'none',
                                 transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
                             }}
                             onFocus={(e) => { e.target.style.borderColor = 'var(--color-primary-400)'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.1)'; }}
@@ -221,5 +230,6 @@ export default function LoginPage() {
                 </form>
             </motion.div>
         </div>
+        </>
     );
 }

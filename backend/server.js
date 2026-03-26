@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const sapiRoutes = require('./routes/sapiRoutes');
 const pemesananRoutes = require('./routes/pemesananRoutes');
 const konfigRoutes = require('./routes/konfigRoutes');
+const jenisSapiRoutes = require('./routes/jenisSapiRoutes');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/sapi', sapiRoutes);
 app.use('/api/pemesanan', pemesananRoutes);
 app.use('/api/konfigurasi', konfigRoutes);
+app.use('/api/jenis-sapi', jenisSapiRoutes);
 
 // Route dasar untuk cek server hidup
 app.get('/', (req, res) => {

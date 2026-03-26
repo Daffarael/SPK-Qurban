@@ -124,6 +124,15 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: null
+        },
+        jenis_sapi_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: null,
+            references: {
+                model: 'jenis_sapi',
+                key: 'id'
+            }
         }
     }, {
         tableName: 'sapi',

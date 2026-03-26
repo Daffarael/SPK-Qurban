@@ -24,6 +24,11 @@ export default function Sidebar() {
             icon: '🐄'
         },
         {
+            href: '/admin/jenis-sapi',
+            label: 'Jenis Sapi',
+            icon: '🏷️'
+        },
+        {
             href: '/admin/sapi/tambah',
             label: 'Tambah Sapi',
             icon: '➕'

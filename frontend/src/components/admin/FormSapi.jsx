@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/services/api';
 import SliderKriteria from '@/components/admin/SliderKriteria';
@@ -36,17 +36,40 @@ export default function FormSapi({ mode = 'tambah' }) {
     const [loadingData, setLoadingData] = useState(mode === 'edit');
     const [fotoPreview, setFotoPreview] = useState(null);
     const [fotoFile, setFotoFile] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [daftarJenisSapi, setDaftarJenisSapi] = useState([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [form, setForm] = useState({
         kode_sapi: '',
         berat_kg: '',
         harga: '',
+        jenis_sapi_id: '',
         c2_bcs: 3,
         c3_postur: 3,
         c4_vitalitas: 3,
         c5_kaki: 3,
         c6_temperamen: 3
     });
+
+    // Load data jenis sapi
+    useEffect(() => {
+        api.get('/jenis-sapi').then(res => {
+            setDaftarJenisSapi(res.data.data);
+        }).catch(() => {});
+    }, []);
 
     // Load data sapi jika mode edit
     useEffect(() => {
@@ -64,6 +87,7 @@ export default function FormSapi({ mode = 'tambah' }) {
                     kode_sapi: sapi.kode_sapi,
                     berat_kg: sapi.berat_kg.toString(),
                     harga: sapi.harga.toString(),
+                    jenis_sapi_id: sapi.jenis_sapi_id ? sapi.jenis_sapi_id.toString() : '',
                     c2_bcs: sapi.c2_bcs,
                     c3_postur: sapi.c3_postur,
                     c4_vitalitas: sapi.c4_vitalitas,
@@ -85,12 +109,53 @@ export default function FormSapi({ mode = 'tambah' }) {
     const berat = parseInt(form.berat_kg) || 0;
     const preview = hitungPreviewSAW(berat, form.c2_bcs, form.c3_postur, form.c4_vitalitas, form.c5_kaki, form.c6_temperamen);
 
+    const processFile = (file) => {
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            toast.error('Format file tidak valid. Gunakan JPG, PNG, atau WEBP.');
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error('Ukuran file maksimal 20MB.');
+            return;
+        }
+        setFotoFile(file);
+        setFotoPreview(URL.createObjectURL(file));
+    };
+
     const handleFotoChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setFotoFile(file);
-            setFotoPreview(URL.createObjectURL(file));
-        }
+        if (file) processFile(file);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) processFile(file);
+    };
+
+    const handleRemoveFoto = () => {
+        setFotoFile(null);
+        setFotoPreview(null);
     };
 
     const handleSubmit = async (e) => {
@@ -107,6 +172,7 @@ export default function FormSapi({ mode = 'tambah' }) {
             formData.append('c4_vitalitas', form.c4_vitalitas);
             formData.append('c5_kaki', form.c5_kaki);
             formData.append('c6_temperamen', form.c6_temperamen);
+            if (form.jenis_sapi_id) formData.append('jenis_sapi_id', form.jenis_sapi_id);
             if (fotoFile) formData.append('foto', fotoFile);
 
             if (mode === 'edit') {
@@ -190,7 +256,7 @@ export default function FormSapi({ mode = 'tambah' }) {
                                         type="text"
                                         value={form.kode_sapi}
                                         onChange={(e) => setForm({ ...form, kode_sapi: e.target.value })}
-                                        placeholder="SAP-001"
+                                        placeholder="SAPI-001"
                                         required
                                         style={inputStyle}
                                     />
@@ -218,6 +284,121 @@ export default function FormSapi({ mode = 'tambah' }) {
                                         min="0"
                                         style={inputStyle}
                                     />
+                                </div>
+                            </div>
+
+                            {/* Jenis Sapi - Custom Dropdown */}
+                            <div style={{ marginTop: '16px' }}>
+                                <label style={labelStyle}>Jenis Sapi</label>
+                                <div ref={dropdownRef} style={{ position: 'relative' }}>
+                                    {/* Trigger Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                                        style={{
+                                            ...inputStyle,
+                                            cursor: 'pointer',
+                                            textAlign: 'center',
+                                            paddingRight: '40px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <span style={{ flex: 1, textAlign: 'center' }}>
+                                            {form.jenis_sapi_id
+                                                ? daftarJenisSapi.find(j => j.id.toString() === form.jenis_sapi_id.toString())?.nama || '— Pilih Jenis Sapi —'
+                                                : '— Pilih Jenis Sapi —'
+                                            }
+                                        </span>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="#94a3b8"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            style={{
+                                                position: 'absolute',
+                                                right: '16px',
+                                                top: '50%',
+                                                transform: `translateY(-50%) rotate(${dropdownOpen ? '180deg' : '0deg'})`,
+                                                transition: 'transform 0.2s ease'
+                                            }}
+                                        >
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </button>
+
+                                    {/* Dropdown List */}
+                                    {dropdownOpen && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 'calc(100% + 4px)',
+                                            left: 0,
+                                            right: 0,
+                                            backgroundColor: 'var(--color-bg-card)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: 'var(--radius-md)',
+                                            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                                            zIndex: 50,
+                                            maxHeight: '260px',
+                                            overflowY: 'auto',
+                                            animation: 'fadeIn 0.15s ease'
+                                        }}>
+                                            {/* Default option */}
+                                            <div
+                                                onClick={() => {
+                                                    setForm({ ...form, jenis_sapi_id: '' });
+                                                    setDropdownOpen(false);
+                                                }}
+                                                style={{
+                                                    padding: '10px 14px',
+                                                    textAlign: 'center',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    color: 'var(--color-text-muted)',
+                                                    backgroundColor: form.jenis_sapi_id === '' ? 'var(--color-primary-500)' : 'transparent',
+                                                    ...(form.jenis_sapi_id === '' && { color: 'white', fontWeight: 600 }),
+                                                    transition: 'background-color 0.15s ease'
+                                                }}
+                                                onMouseEnter={(e) => { if (form.jenis_sapi_id !== '') e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)'; }}
+                                                onMouseLeave={(e) => { if (form.jenis_sapi_id !== '') e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                            >
+                                                — Pilih Jenis Sapi —
+                                            </div>
+                                            {daftarJenisSapi.map((j) => {
+                                                const isSelected = form.jenis_sapi_id.toString() === j.id.toString();
+                                                return (
+                                                    <div
+                                                        key={j.id}
+                                                        onClick={() => {
+                                                            setForm({ ...form, jenis_sapi_id: j.id.toString() });
+                                                            setDropdownOpen(false);
+                                                        }}
+                                                        style={{
+                                                            padding: '10px 14px',
+                                                            textAlign: 'center',
+                                                            cursor: 'pointer',
+                                                            fontSize: '14px',
+                                                            color: isSelected ? 'white' : 'var(--color-text)',
+                                                            backgroundColor: isSelected ? 'var(--color-primary-500)' : 'transparent',
+                                                            fontWeight: isSelected ? 600 : 400,
+                                                            transition: 'background-color 0.15s ease'
+                                                        }}
+                                                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)'; }}
+                                                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                    >
+                                                        {j.nama}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -295,16 +476,23 @@ export default function FormSapi({ mode = 'tambah' }) {
                                 Foto Sapi
                             </h2>
 
-                            <label style={{
-                                display: 'block',
-                                padding: '24px',
-                                border: '2px dashed var(--color-border)',
-                                borderRadius: 'var(--radius-md)',
-                                textAlign: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                backgroundColor: 'var(--color-bg-secondary)'
-                            }}>
+                            <label
+                                onDragOver={handleDragOver}
+                                onDragEnter={handleDragEnter}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                style={{
+                                    display: 'block',
+                                    padding: '32px 24px',
+                                    border: `2px dashed ${isDragging ? 'var(--color-primary-500)' : 'var(--color-border)'}`,
+                                    borderRadius: 'var(--radius-md)',
+                                    textAlign: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    backgroundColor: isDragging ? 'var(--color-primary-50)' : 'var(--color-bg-secondary)',
+                                    transform: isDragging ? 'scale(1.01)' : 'scale(1)'
+                                }}
+                            >
                                 <input
                                     type="file"
                                     accept="image/jpeg,image/png,image/webp"
@@ -312,26 +500,57 @@ export default function FormSapi({ mode = 'tambah' }) {
                                     style={{ display: 'none' }}
                                 />
                                 {fotoPreview ? (
-                                    <img
-                                        src={fotoPreview}
-                                        alt="Preview"
-                                        style={{
-                                            maxWidth: '200px',
-                                            maxHeight: '150px',
-                                            objectFit: 'cover',
-                                            borderRadius: 'var(--radius-md)',
-                                            margin: '0 auto'
-                                        }}
-                                    />
+                                    <div>
+                                        <img
+                                            src={fotoPreview}
+                                            alt="Preview"
+                                            style={{
+                                                maxWidth: '240px',
+                                                maxHeight: '180px',
+                                                objectFit: 'cover',
+                                                borderRadius: 'var(--radius-md)',
+                                                margin: '0 auto',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                            }}
+                                        />
+                                        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '10px' }}>
+                                            Klik atau drag foto baru untuk mengganti
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div>
-                                        <div style={{ fontSize: '28px', marginBottom: '8px' }}>📷</div>
-                                        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                                            Klik untuk upload foto (JPG, PNG, WEBP, max 5MB)
+                                        <div style={{ fontSize: '36px', marginBottom: '10px' }}>{isDragging ? '📥' : '📷'}</div>
+                                        <div style={{ fontSize: '14px', fontWeight: 500, color: isDragging ? 'var(--color-primary-500)' : 'var(--color-text)' }}>
+                                            {isDragging ? 'Lepaskan file di sini...' : 'Drag & drop foto di sini'}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+                                            atau klik untuk memilih file (JPG, PNG, WEBP, max 20MB)
                                         </div>
                                     </div>
                                 )}
                             </label>
+                            {fotoPreview && (
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveFoto}
+                                    style={{
+                                        marginTop: '10px',
+                                        padding: '6px 16px',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        color: 'var(--color-danger)',
+                                        backgroundColor: 'transparent',
+                                        border: '1px solid var(--color-danger)',
+                                        borderRadius: 'var(--radius-md)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        display: 'block',
+                                        margin: '10px auto 0'
+                                    }}
+                                >
+                                    Hapus Foto
+                                </button>
+                            )}
                         </div>
                     </div>
 

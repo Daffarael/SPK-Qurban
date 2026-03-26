@@ -41,7 +41,8 @@ async function getPublikSapi(req, res, next) {
         const daftarSapi = await Sapi.findAll({
             where,
             order: [['skor_saw', 'DESC']],
-            attributes: { exclude: ['createdAt', 'updatedAt'] }
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
 
         return sukses(res, 'Data sapi publik berhasil diambil.', daftarSapi);
@@ -62,7 +63,8 @@ async function getPublikSapiById(req, res, next) {
                 status: 'Available',
                 skor_saw: { [db.Sequelize.Op.gte]: 60 }
             },
-            attributes: { exclude: ['createdAt', 'updatedAt'] }
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
 
         if (!sapi) {
@@ -86,7 +88,8 @@ async function getPublikSapiById(req, res, next) {
 async function getAllSapi(req, res, next) {
     try {
         const daftarSapi = await Sapi.findAll({
-            order: [['skor_saw', 'DESC']]
+            order: [['skor_saw', 'DESC']],
+            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
 
         return sukses(res, 'Semua data sapi berhasil diambil.', daftarSapi);
@@ -108,7 +111,8 @@ async function getSapiTidakLolos(req, res, next) {
                     { skor_saw: null }
                 ]
             },
-            order: [['skor_saw', 'DESC']]
+            order: [['skor_saw', 'DESC']],
+            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
 
         return sukses(res, 'Data sapi tidak lolos berhasil diambil.', daftarSapi);
@@ -125,7 +129,8 @@ async function createSapi(req, res, next) {
     try {
         const {
             kode_sapi, berat_kg, harga,
-            c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen
+            c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen,
+            jenis_sapi_id
         } = req.body;
 
         // Validasi input wajib
@@ -166,7 +171,8 @@ async function createSapi(req, res, next) {
             c6_temperamen: parseInt(c6_temperamen),
             skor_saw: hasilSAW.skor_saw,
             grade: hasilSAW.grade,
-            foto_url: req.file ? `/uploads/${req.file.filename}` : null
+            foto_url: req.file ? `/uploads/${req.file.filename}` : null,
+            jenis_sapi_id: jenis_sapi_id ? parseInt(jenis_sapi_id) : null
         };
 
         const sapi = await Sapi.create(dataSapi);
@@ -191,7 +197,8 @@ async function updateSapi(req, res, next) {
 
         const {
             kode_sapi, berat_kg, harga,
-            c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen
+            c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen,
+            jenis_sapi_id
         } = req.body;
 
         // Cek kode sapi duplikat (jika diubah)
@@ -225,7 +232,8 @@ async function updateSapi(req, res, next) {
             c5_kaki: c5Baru,
             c6_temperamen: c6Baru,
             skor_saw: hasilSAW.skor_saw,
-            grade: hasilSAW.grade
+            grade: hasilSAW.grade,
+            jenis_sapi_id: jenis_sapi_id !== undefined ? (jenis_sapi_id ? parseInt(jenis_sapi_id) : null) : sapi.jenis_sapi_id
         };
 
         // Handle foto baru
