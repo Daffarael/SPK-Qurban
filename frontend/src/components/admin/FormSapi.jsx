@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/services/api';
-import SliderKriteria from '@/components/admin/SliderKriteria';
+import ChecklistKriteria from '@/components/admin/ChecklistKriteria';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import BadgeGrade from '@/components/common/BadgeGrade';
 import toast from 'react-hot-toast';
@@ -56,13 +56,59 @@ export default function FormSapi({ mode = 'tambah' }) {
         kode_sapi: '',
         berat_kg: '',
         harga: '',
-        jenis_sapi_id: '',
-        c2_bcs: 3,
-        c3_postur: 3,
-        c4_vitalitas: 3,
-        c5_kaki: 3,
-        c6_temperamen: 3
+        jenis_sapi_id: ''
     });
+
+    // Checklist state: 5 kriteria × 4 pernyataan
+    const [checklist, setChecklist] = useState({
+        c2: [false, false, false, false],
+        c3: [false, false, false, false],
+        c4: [false, false, false, false],
+        c5: [false, false, false, false],
+        c6: [false, false, false, false]
+    });
+
+    // Skor tersimpan (untuk info di mode edit, data lama tanpa checklist)
+    const [skorTersimpan, setSkorTersimpan] = useState({
+        c2: null, c3: null, c4: null, c5: null, c6: null
+    });
+
+    // Definisi pernyataan checklist
+    const CHECKLIST_ITEMS = {
+        c2: [
+            'Tulang rusuk tidak terlihat/teraba',
+            'Pangkal ekor tertutup lemak tebal',
+            'Leher terlihat penuh dan tebal',
+            'Daging paha membulat penuh'
+        ],
+        c3: [
+            'Punggung lurus sempurna (tidak melengkung/bengkok)',
+            'Dada terlihat dalam dan lebar',
+            'Tanduk utuh dan simetris',
+            'Postur badan panjang dan proporsional (berbentuk balok)'
+        ],
+        c4: [
+            'Mata bening, bersinar, dan tidak berair/belekan',
+            'Napas teratur (tidak ngos-ngosan saat cuaca normal)',
+            'Area anus dan pencernaan bersih (tidak mencret)',
+            'Bulu mengkilap, kulit lentur, bebas kutu/jamur'
+        ],
+        c5: [
+            'Keempat kaki tegak lurus sempurna (tidak bentuk X atau O)',
+            'Kuku utuh, keras, dan tidak ada infeksi/pembengkakan',
+            'Langkah berjalan mantap (tidak diseret/pincang)',
+            'Berdiri kokoh (kaki tidak gemetar saat menopang badan)'
+        ],
+        c6: [
+            'Tenang saat didekati banyak orang',
+            'Kepala mudah dikendalikan saat dipegang tali keluhnya',
+            'Tidak sering menghentakkan kaki ke tanah',
+            'Tidak menunjukkan gestur agresif/menyeruduk'
+        ]
+    };
+
+    // Hitung skor dari checklist: count(true) + 1
+    const getSkorFromChecklist = (arr) => arr.filter(Boolean).length + 1;
 
     // Load data jenis sapi
     useEffect(() => {
@@ -87,13 +133,32 @@ export default function FormSapi({ mode = 'tambah' }) {
                     kode_sapi: sapi.kode_sapi,
                     berat_kg: sapi.berat_kg.toString(),
                     harga: sapi.harga.toString(),
-                    jenis_sapi_id: sapi.jenis_sapi_id ? sapi.jenis_sapi_id.toString() : '',
-                    c2_bcs: sapi.c2_bcs,
-                    c3_postur: sapi.c3_postur,
-                    c4_vitalitas: sapi.c4_vitalitas,
-                    c5_kaki: sapi.c5_kaki,
-                    c6_temperamen: sapi.c6_temperamen
+                    jenis_sapi_id: sapi.jenis_sapi_id ? sapi.jenis_sapi_id.toString() : ''
                 });
+
+                // Load checklist data jika ada, atau set skorTersimpan
+                const loadedChecklist = { ...checklist };
+                const loadedSkorTersimpan = { c2: null, c3: null, c4: null, c5: null, c6: null };
+
+                const keys = [
+                    { ck: 'c2', skor: 'c2_bcs', cl: 'c2_checklist' },
+                    { ck: 'c3', skor: 'c3_postur', cl: 'c3_checklist' },
+                    { ck: 'c4', skor: 'c4_vitalitas', cl: 'c4_checklist' },
+                    { ck: 'c5', skor: 'c5_kaki', cl: 'c5_checklist' },
+                    { ck: 'c6', skor: 'c6_temperamen', cl: 'c6_checklist' }
+                ];
+
+                keys.forEach(({ ck, skor, cl }) => {
+                    if (sapi[cl] && Array.isArray(sapi[cl])) {
+                        loadedChecklist[ck] = sapi[cl];
+                    } else {
+                        // Data lama tanpa checklist — tampilkan info skor
+                        loadedSkorTersimpan[ck] = sapi[skor];
+                    }
+                });
+
+                setChecklist(loadedChecklist);
+                setSkorTersimpan(loadedSkorTersimpan);
                 if (sapi.foto_url) {
                     setFotoPreview(`http://localhost:5000${sapi.foto_url}`);
                 }
@@ -105,9 +170,14 @@ export default function FormSapi({ mode = 'tambah' }) {
         }
     };
 
-    // Preview SAW real-time
+    // Preview SAW real-time (skor dari checklist)
     const berat = parseInt(form.berat_kg) || 0;
-    const preview = hitungPreviewSAW(berat, form.c2_bcs, form.c3_postur, form.c4_vitalitas, form.c5_kaki, form.c6_temperamen);
+    const skorC2 = getSkorFromChecklist(checklist.c2);
+    const skorC3 = getSkorFromChecklist(checklist.c3);
+    const skorC4 = getSkorFromChecklist(checklist.c4);
+    const skorC5 = getSkorFromChecklist(checklist.c5);
+    const skorC6 = getSkorFromChecklist(checklist.c6);
+    const preview = hitungPreviewSAW(berat, skorC2, skorC3, skorC4, skorC5, skorC6);
 
     const processFile = (file) => {
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -167,11 +237,16 @@ export default function FormSapi({ mode = 'tambah' }) {
             formData.append('kode_sapi', form.kode_sapi);
             formData.append('berat_kg', form.berat_kg);
             formData.append('harga', form.harga);
-            formData.append('c2_bcs', form.c2_bcs);
-            formData.append('c3_postur', form.c3_postur);
-            formData.append('c4_vitalitas', form.c4_vitalitas);
-            formData.append('c5_kaki', form.c5_kaki);
-            formData.append('c6_temperamen', form.c6_temperamen);
+            formData.append('c2_bcs', getSkorFromChecklist(checklist.c2));
+            formData.append('c3_postur', getSkorFromChecklist(checklist.c3));
+            formData.append('c4_vitalitas', getSkorFromChecklist(checklist.c4));
+            formData.append('c5_kaki', getSkorFromChecklist(checklist.c5));
+            formData.append('c6_temperamen', getSkorFromChecklist(checklist.c6));
+            formData.append('c2_checklist', JSON.stringify(checklist.c2));
+            formData.append('c3_checklist', JSON.stringify(checklist.c3));
+            formData.append('c4_checklist', JSON.stringify(checklist.c4));
+            formData.append('c5_checklist', JSON.stringify(checklist.c5));
+            formData.append('c6_checklist', JSON.stringify(checklist.c6));
             if (form.jenis_sapi_id) formData.append('jenis_sapi_id', form.jenis_sapi_id);
             if (fotoFile) formData.append('foto', fotoFile);
 
@@ -421,7 +496,6 @@ export default function FormSapi({ mode = 'tambah' }) {
                             )}
                         </div>
 
-                        {/* Kriteria SAW */}
                         <div style={{
                             backgroundColor: 'var(--color-bg-card)',
                             borderRadius: 'var(--radius-lg)',
@@ -430,38 +504,43 @@ export default function FormSapi({ mode = 'tambah' }) {
                             marginBottom: '16px'
                         }}>
                             <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '20px' }}>
-                                Kriteria SAW (Geser slider 1-5)
+                                Ceklis Kondisi Fisik Sapi
                             </h2>
 
-                            <SliderKriteria
-                                label="C2 — Body Condition Score"
-                                keterangan="Kondisi tubuh & lemak"
-                                value={form.c2_bcs}
-                                onChange={(v) => setForm({ ...form, c2_bcs: v })}
+                            <ChecklistKriteria
+                                label="C2 — Body Condition Score (Kepadatan Daging)"
+                                items={CHECKLIST_ITEMS.c2}
+                                checked={checklist.c2}
+                                onChange={(v) => setChecklist({ ...checklist, c2: v })}
+                                skorTersimpan={skorTersimpan.c2}
                             />
-                            <SliderKriteria
-                                label="C3 — Konformasi & Postur"
-                                keterangan="Bentuk fisik proporsional"
-                                value={form.c3_postur}
-                                onChange={(v) => setForm({ ...form, c3_postur: v })}
+                            <ChecklistKriteria
+                                label="C3 — Konformasi & Postur Tubuh"
+                                items={CHECKLIST_ITEMS.c3}
+                                checked={checklist.c3}
+                                onChange={(v) => setChecklist({ ...checklist, c3: v })}
+                                skorTersimpan={skorTersimpan.c3}
                             />
-                            <SliderKriteria
-                                label="C4 — Vitalitas & Kesehatan"
-                                keterangan="Aktif, sehat, nafsu makan"
-                                value={form.c4_vitalitas}
-                                onChange={(v) => setForm({ ...form, c4_vitalitas: v })}
+                            <ChecklistKriteria
+                                label="C4 — Vitalitas & Kesehatan Klinis"
+                                items={CHECKLIST_ITEMS.c4}
+                                checked={checklist.c4}
+                                onChange={(v) => setChecklist({ ...checklist, c4: v })}
+                                skorTersimpan={skorTersimpan.c4}
                             />
-                            <SliderKriteria
-                                label="C5 — Kekokohan Kaki"
-                                keterangan="Kaki kuat & kokoh"
-                                value={form.c5_kaki}
-                                onChange={(v) => setForm({ ...form, c5_kaki: v })}
+                            <ChecklistKriteria
+                                label="C5 — Kekokohan Kaki & Kuku"
+                                items={CHECKLIST_ITEMS.c5}
+                                checked={checklist.c5}
+                                onChange={(v) => setChecklist({ ...checklist, c5: v })}
+                                skorTersimpan={skorTersimpan.c5}
                             />
-                            <SliderKriteria
-                                label="C6 — Temperamen"
-                                keterangan="Jinak & mudah diatur"
-                                value={form.c6_temperamen}
-                                onChange={(v) => setForm({ ...form, c6_temperamen: v })}
+                            <ChecklistKriteria
+                                label="C6 — Temperamen / Karakter Perilaku"
+                                items={CHECKLIST_ITEMS.c6}
+                                checked={checklist.c6}
+                                onChange={(v) => setChecklist({ ...checklist, c6: v })}
+                                skorTersimpan={skorTersimpan.c6}
                             />
                         </div>
 

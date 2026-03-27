@@ -92,6 +92,39 @@ module.exports = (sequelize) => {
             }
         },
         // ==============================
+        // CHECKLIST DATA (detail centangan)
+        // ==============================
+        c2_checklist: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Checklist BCS [bool,bool,bool,bool]'
+        },
+        c3_checklist: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Checklist Postur [bool,bool,bool,bool]'
+        },
+        c4_checklist: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Checklist Vitalitas [bool,bool,bool,bool]'
+        },
+        c5_checklist: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Checklist Kaki [bool,bool,bool,bool]'
+        },
+        c6_checklist: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Checklist Temperamen [bool,bool,bool,bool]'
+        },
+        // ==============================
         // HASIL PERHITUNGAN SAW
         // ==============================
         skor_saw: {

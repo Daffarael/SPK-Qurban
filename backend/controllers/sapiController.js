@@ -130,8 +130,16 @@ async function createSapi(req, res, next) {
         const {
             kode_sapi, berat_kg, harga,
             c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen,
+            c2_checklist, c3_checklist, c4_checklist, c5_checklist, c6_checklist,
             jenis_sapi_id
         } = req.body;
+
+        // Helper: parse JSON string dari FormData
+        const parseChecklist = (val) => {
+            if (!val) return null;
+            if (Array.isArray(val)) return val;
+            try { return JSON.parse(val); } catch { return null; }
+        };
 
         // Validasi input wajib
         if (!kode_sapi || !berat_kg || !harga) {
@@ -171,6 +179,11 @@ async function createSapi(req, res, next) {
             c6_temperamen: parseInt(c6_temperamen),
             skor_saw: hasilSAW.skor_saw,
             grade: hasilSAW.grade,
+            c2_checklist: parseChecklist(c2_checklist),
+            c3_checklist: parseChecklist(c3_checklist),
+            c4_checklist: parseChecklist(c4_checklist),
+            c5_checklist: parseChecklist(c5_checklist),
+            c6_checklist: parseChecklist(c6_checklist),
             foto_url: req.file ? `/uploads/${req.file.filename}` : null,
             jenis_sapi_id: jenis_sapi_id ? parseInt(jenis_sapi_id) : null
         };
@@ -198,8 +211,16 @@ async function updateSapi(req, res, next) {
         const {
             kode_sapi, berat_kg, harga,
             c2_bcs, c3_postur, c4_vitalitas, c5_kaki, c6_temperamen,
+            c2_checklist, c3_checklist, c4_checklist, c5_checklist, c6_checklist,
             jenis_sapi_id
         } = req.body;
+
+        // Helper: parse JSON string dari FormData
+        const parseChecklist = (val) => {
+            if (!val) return null;
+            if (Array.isArray(val)) return val;
+            try { return JSON.parse(val); } catch { return null; }
+        };
 
         // Cek kode sapi duplikat (jika diubah)
         if (kode_sapi && kode_sapi !== sapi.kode_sapi) {
@@ -233,6 +254,11 @@ async function updateSapi(req, res, next) {
             c6_temperamen: c6Baru,
             skor_saw: hasilSAW.skor_saw,
             grade: hasilSAW.grade,
+            c2_checklist: c2_checklist ? parseChecklist(c2_checklist) : sapi.c2_checklist,
+            c3_checklist: c3_checklist ? parseChecklist(c3_checklist) : sapi.c3_checklist,
+            c4_checklist: c4_checklist ? parseChecklist(c4_checklist) : sapi.c4_checklist,
+            c5_checklist: c5_checklist ? parseChecklist(c5_checklist) : sapi.c5_checklist,
+            c6_checklist: c6_checklist ? parseChecklist(c6_checklist) : sapi.c6_checklist,
             jenis_sapi_id: jenis_sapi_id !== undefined ? (jenis_sapi_id ? parseInt(jenis_sapi_id) : null) : sapi.jenis_sapi_id
         };
 
