@@ -12,12 +12,12 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const KRITERIA_LABELS = [
-    { key: 'c1_bobot', kode: 'C1', nama: 'Bobot Hidup', icon: '⚖️' },
-    { key: 'c2_bcs', kode: 'C2', nama: 'Body Condition Score', icon: '💪' },
-    { key: 'c3_postur', kode: 'C3', nama: 'Konformasi & Postur', icon: '📐' },
-    { key: 'c4_vitalitas', kode: 'C4', nama: 'Vitalitas & Kesehatan', icon: '❤️' },
-    { key: 'c5_kaki', kode: 'C5', nama: 'Kekokohan Kaki', icon: '🦵' },
-    { key: 'c6_temperamen', kode: 'C6', nama: 'Temperamen', icon: '🧘' }
+    { key: 'c1_bobot', nama: 'Berat Badan', icon: '⚖️' },
+    { key: 'c2_bcs', nama: 'Kondisi Tubuh', icon: '💪' },
+    { key: 'c3_postur', nama: 'Bentuk & Postur', icon: '📐' },
+    { key: 'c4_vitalitas', nama: 'Kesehatan', icon: '❤️' },
+    { key: 'c5_kaki', nama: 'Kekuatan Kaki', icon: '🦵' },
+    { key: 'c6_temperamen', nama: 'Ketenangan', icon: '🧘' }
 ];
 
 export default function DetailSapiPage() {
@@ -182,7 +182,7 @@ export default function DetailSapiPage() {
                                 color: 'var(--color-text)',
                                 marginBottom: '20px'
                             }}>
-                                Detail Kriteria SAW
+                                Penilaian Kualitas
                             </h3>
 
                             {KRITERIA_LABELS.map((k, i) => {
@@ -204,7 +204,7 @@ export default function DetailSapiPage() {
                                         <span style={{ fontSize: '22px' }}>{k.icon}</span>
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>
-                                                {k.kode} — {k.nama}
+                                                {k.nama}
                                             </div>
                                             <div style={{
                                                 marginTop: '6px',
@@ -290,7 +290,7 @@ export default function DetailSapiPage() {
                                 marginBottom: '20px'
                             }}>
                                 <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: '4px' }}>
-                                    SKOR SAW
+                                    SKOR KUALITAS
                                 </div>
                                 <div style={{
                                     fontSize: '42px',

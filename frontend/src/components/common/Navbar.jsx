@@ -73,7 +73,7 @@ export default function Navbar() {
                             color: 'var(--color-text-muted)',
                             fontWeight: 500
                         }}>
-                            SPK Sapi Qurban
+                            Baru Setiap Hari
                         </div>
                     </div>
                 </Link>

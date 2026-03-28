@@ -133,7 +133,7 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                                 marginBottom: '4px'
                             }}>
                                 <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-                                    Skor SAW
+                                    Skor Kualitas
                                 </span>
                                 <span style={{
                                     fontSize: '14px',
@@ -186,6 +186,8 @@ export default function KatalogPage() {
     const [daftarSapi, setDaftarSapi] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterGrade, setFilterGrade] = useState('Semua');
+    const [filterJenis, setFilterJenis] = useState('Semua');
+    const [sortBy, setSortBy] = useState('skor');
 
     useEffect(() => {
         fetchSapi();
@@ -204,9 +206,37 @@ export default function KatalogPage() {
 
     const grades = ['Semua', 'Platinum', 'Gold', 'Silver'];
 
-    const filtered = filterGrade === 'Semua'
-        ? daftarSapi
-        : daftarSapi.filter(s => s.grade === filterGrade);
+    // Get unique jenis sapi from data
+    const jenisOptions = ['Semua', ...Array.from(
+        new Set(daftarSapi.filter(s => s.jenisSapi).map(s => s.jenisSapi.nama))
+    )];
+
+    // Apply filters
+    let filtered = daftarSapi;
+    if (filterGrade !== 'Semua') {
+        filtered = filtered.filter(s => s.grade === filterGrade);
+    }
+    if (filterJenis !== 'Semua') {
+        filtered = filtered.filter(s => s.jenisSapi && s.jenisSapi.nama === filterJenis);
+    }
+
+    // Apply sort
+    filtered = [...filtered].sort((a, b) => {
+        switch (sortBy) {
+            case 'harga_asc': return parseFloat(a.harga) - parseFloat(b.harga);
+            case 'harga_desc': return parseFloat(b.harga) - parseFloat(a.harga);
+            case 'berat_desc': return b.berat_kg - a.berat_kg;
+            case 'skor':
+            default: return b.skor_saw - a.skor_saw;
+        }
+    });
+
+    const sortLabel = {
+        skor: '⭐ Kualitas Terbaik',
+        harga_asc: '💰 Harga Terendah',
+        harga_desc: '💰 Harga Tertinggi',
+        berat_desc: '⚖️ Berat Terbesar'
+    };
 
     return (
         <>
@@ -235,42 +265,140 @@ export default function KatalogPage() {
                         fontSize: '15px',
                         color: 'var(--color-text-secondary)'
                     }}>
-                        {daftarSapi.length} sapi tersedia — Diurutkan berdasarkan skor SAW tertinggi
+                        {daftarSapi.length} sapi tersedia — Pilih yang paling sesuai untuk Anda
                     </p>
                 </motion.div>
 
-                {/* Filter */}
+                {/* Filter Bar */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.15 }}
                     style={{
                         display: 'flex',
-                        gap: '8px',
-                        marginBottom: '28px',
-                        flexWrap: 'wrap'
+                        flexDirection: 'column',
+                        gap: '16px',
+                        marginBottom: '28px'
                     }}
                 >
-                    {grades.map(g => (
-                        <button
-                            key={g}
-                            onClick={() => setFilterGrade(g)}
-                            style={{
-                                padding: '8px 18px',
-                                borderRadius: '999px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                border: '1px solid',
-                                borderColor: filterGrade === g ? 'var(--color-primary-500)' : 'var(--color-border)',
-                                backgroundColor: filterGrade === g ? 'var(--color-primary-500)' : 'var(--color-bg-card)',
-                                color: filterGrade === g ? 'white' : 'var(--color-text-secondary)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            {g === 'Semua' ? '🐄 Semua' : g === 'Platinum' ? '💎 Platinum' : g === 'Gold' ? '🥇 Gold' : '🥈 Silver'}
-                        </button>
-                    ))}
+                    {/* Row 1: Grade Filter */}
+                    <div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                            KELAS KUALITAS
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {grades.map(g => (
+                                <button
+                                    key={g}
+                                    onClick={() => setFilterGrade(g)}
+                                    style={{
+                                        padding: '8px 18px',
+                                        borderRadius: '999px',
+                                        fontSize: '13px',
+                                        fontWeight: 600,
+                                        border: '1px solid',
+                                        borderColor: filterGrade === g ? 'var(--color-primary-500)' : 'var(--color-border)',
+                                        backgroundColor: filterGrade === g ? 'var(--color-primary-500)' : 'var(--color-bg-card)',
+                                        color: filterGrade === g ? 'white' : 'var(--color-text-secondary)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    {g === 'Semua' ? '🐄 Semua' : g === 'Platinum' ? '💎 Platinum' : g === 'Gold' ? '🥇 Gold' : '🥈 Silver'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Row 2: Jenis Sapi + Sort */}
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                        {/* Jenis Sapi Filter */}
+                        {jenisOptions.length > 2 && (
+                            <div style={{ flex: 1, minWidth: '200px' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                                    JENIS SAPI
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {jenisOptions.map(j => (
+                                        <button
+                                            key={j}
+                                            onClick={() => setFilterJenis(j)}
+                                            style={{
+                                                padding: '7px 14px',
+                                                borderRadius: '999px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                border: '1px solid',
+                                                borderColor: filterJenis === j ? 'var(--color-primary-500)' : 'var(--color-border)',
+                                                backgroundColor: filterJenis === j ? 'var(--color-primary-500)' : 'var(--color-bg-card)',
+                                                color: filterJenis === j ? 'white' : 'var(--color-text-secondary)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            {j === 'Semua' ? '🏷️ Semua Jenis' : j}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sort Dropdown */}
+                        <div style={{ minWidth: '200px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+                                URUTKAN
+                            </div>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '9px 14px',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--color-border)',
+                                    backgroundColor: 'var(--color-bg-card)',
+                                    color: 'var(--color-text)',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                    appearance: 'none',
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'right 12px center'
+                                }}
+                            >
+                                {Object.entries(sortLabel).map(([val, label]) => (
+                                    <option key={val} value={val}>{label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Active filters indicator */}
+                    {(filterGrade !== 'Semua' || filterJenis !== 'Semua') && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                Menampilkan {filtered.length} dari {daftarSapi.length} sapi
+                            </span>
+                            <button
+                                onClick={() => { setFilterGrade('Semua'); setFilterJenis('Semua'); setSortBy('skor'); }}
+                                style={{
+                                    padding: '4px 12px',
+                                    borderRadius: '999px',
+                                    border: '1px solid var(--color-border)',
+                                    backgroundColor: 'var(--color-bg-secondary)',
+                                    color: 'var(--color-text-muted)',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                ✕ Reset Filter
+                            </button>
+                        </div>
+                    )}
                 </motion.div>
 
                 {/* Loading */}

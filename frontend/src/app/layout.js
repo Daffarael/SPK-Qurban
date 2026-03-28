@@ -4,8 +4,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import ToasterProvider from '@/components/common/ToasterProvider';
 
 export const metadata = {
-  title: 'SPK Sapi Qurban - PT Ghaffar Farm Bersaudara',
-  description: 'Sistem Penunjang Keputusan pemilihan sapi qurban terbaik menggunakan metode SAW. PT Ghaffar Farm Bersaudara - Baru Setiap Hari.',
+  title: 'Sapi Qurban - PT Ghaffar Farm Bersaudara',
+  description: 'Pilih sapi qurban terbaik dengan kualitas terjamin. PT Ghaffar Farm Bersaudara - Baru Setiap Hari.',
   icons: {
     icon: '/logo.png'
   }

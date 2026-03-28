@@ -68,36 +68,48 @@ const GRADES = [
   {
     grade: 'Platinum',
     icon: '💎',
-    range: 'Skor > 90',
-    desc: 'Sapi terbaik dengan kualitas premium di semua kriteria penilaian.',
+    range: 'Kualitas Premium',
+    desc: 'Sapi pilihan terbaik dengan kondisi sehat, berat ideal, dan postur sempurna. Cocok untuk qurban premium.',
     color: '#818cf8',
     bg: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)'
   },
   {
     grade: 'Gold',
     icon: '🥇',
-    range: 'Skor 75 - 90',
-    desc: 'Sapi berkualitas tinggi, ideal untuk qurban dengan standar terbaik.',
+    range: 'Kualitas Tinggi',
+    desc: 'Sapi berkualitas tinggi yang sudah memenuhi semua standar qurban dengan sangat baik.',
     color: '#f59e0b',
     bg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
   },
   {
     grade: 'Silver',
     icon: '🥈',
-    range: 'Skor 60 - 74',
-    desc: 'Sapi berkualitas baik yang telah memenuhi standar syarat qurban.',
+    range: 'Kualitas Baik',
+    desc: 'Sapi berkualitas baik dengan harga lebih terjangkau. Tetap layak untuk qurban.',
     color: '#64748b',
     bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
   }
 ];
 
-const KRITERIA = [
-  { kode: 'C1', nama: 'Bobot Hidup', bobot: '30%', icon: '⚖️', desc: 'Berat badan sapi dalam kilogram' },
-  { kode: 'C2', nama: 'Body Condition Score', bobot: '20%', icon: '💪', desc: 'Kondisi tubuh dan cadangan lemak' },
-  { kode: 'C3', nama: 'Konformasi & Postur', bobot: '15%', icon: '📐', desc: 'Bentuk fisik yang proporsional' },
-  { kode: 'C4', nama: 'Vitalitas', bobot: '15%', icon: '❤️', desc: 'Tingkat kesehatan dan keaktifan' },
-  { kode: 'C5', nama: 'Kekokohan Kaki', bobot: '10%', icon: '🦵', desc: 'Kekuatan dan kekokohan kaki' },
-  { kode: 'C6', nama: 'Temperamen', bobot: '10%', icon: '🧘', desc: 'Ketenangan dan kemudahan diatur' }
+const LANGKAH = [
+  {
+    step: '01',
+    icon: '📋',
+    title: 'Pilih Sapi',
+    desc: 'Telusuri katalog sapi yang sudah dinilai kualitasnya oleh tim ahli kami.'
+  },
+  {
+    step: '02',
+    icon: '📊',
+    title: 'Bandingkan Kualitas',
+    desc: 'Lihat skor, grade, berat, dan harga setiap sapi untuk perbandingan yang mudah.'
+  },
+  {
+    step: '03',
+    icon: '📱',
+    title: 'Pesan Langsung',
+    desc: 'Booking sapi favorit Anda langsung dari website dalam hitungan detik.'
+  }
 ];
 
 export default function HomePage() {
@@ -208,7 +220,7 @@ export default function HomePage() {
                 textShadow: '0 2px 20px rgba(0,0,0,0.3)'
               }}
             >
-              Sistem Penunjang Keputusan{' '}
+              Pilih{' '}
               <span style={{
                 background: 'linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%)',
                 WebkitBackgroundClip: 'text',
@@ -217,6 +229,7 @@ export default function HomePage() {
               }}>
                 Sapi Qurban Terbaik
               </span>
+              {' '}Untuk Ibadah Anda
             </motion.h1>
 
             {/* Subtitle */}
@@ -234,8 +247,8 @@ export default function HomePage() {
                 textShadow: '0 1px 8px rgba(0,0,0,0.2)'
               }}
             >
-              Pilih sapi qurban berkualitas yang dinilai secara transparan menggunakan
-              metode <strong style={{ color: '#ffffff' }}>SAW</strong> (Simple Additive Weighting) dengan 6 kriteria penilaian profesional.
+              Setiap sapi sudah dinilai kualitasnya oleh tim ahli kami.
+              Anda tinggal <strong style={{ color: '#ffffff' }}>pilih yang paling sesuai</strong> dengan kebutuhan dan budget Anda.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -295,9 +308,9 @@ export default function HomePage() {
             boxShadow: 'var(--shadow-md)',
             overflow: 'hidden'
           }}>
-            <AnimatedCounter value="6" label="Kriteria Penilaian" icon="📊" delay={0} />
-            <AnimatedCounter value="3" label="Level Grade" icon="🏆" delay={0.1} />
-            <AnimatedCounter value="SAW" label="Metode Ilmiah" icon="📐" delay={0.2} />
+            <AnimatedCounter value="✓" label="Dinilai Ahli" icon="👨‍⚕️" delay={0} />
+            <AnimatedCounter value="3" label="Kelas Kualitas" icon="🏆" delay={0.1} />
+            <AnimatedCounter value="100%" label="Transparan" icon="🔍" delay={0.2} />
             <AnimatedCounter value="48j" label="Masa Booking" icon="⏰" delay={0.3} />
           </div>
         </section>
@@ -322,14 +335,14 @@ export default function HomePage() {
                   fontWeight: 600,
                   marginBottom: '12px'
                 }}>
-                  BAGAIMANA CARA KERJANYA?
+                  CARA MEMILIH SAPI
                 </span>
                 <h2 style={{
                   fontSize: '30px',
                   fontWeight: 800,
                   color: 'var(--color-text)'
                 }}>
-                  Metode SAW yang Transparan
+                  Semudah 3 Langkah
                 </h2>
                 <p style={{
                   fontSize: '15px',
@@ -338,7 +351,7 @@ export default function HomePage() {
                   maxWidth: '500px',
                   margin: '8px auto 0'
                 }}>
-                  Setiap sapi dinilai berdasarkan 6 kriteria dengan bobot ilmiah
+                  Tidak perlu repot. Pilih, bandingkan, dan pesan langsung dari rumah
                 </p>
               </div>
             </AnimatedSection>
@@ -346,63 +359,51 @@ export default function HomePage() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px'
+              gap: '20px'
             }}>
-              {KRITERIA.map((k, i) => (
-                <AnimatedSection key={k.kode} delay={i * 0.08}>
+              {LANGKAH.map((l, i) => (
+                <AnimatedSection key={l.step} delay={i * 0.12}>
                   <motion.div
                     whileHover={{ y: -4, boxShadow: '0 8px 25px rgba(0,0,0,0.08)' }}
                     transition={{ duration: 0.2 }}
                     style={{
                       backgroundColor: 'var(--color-bg-card)',
-                      borderRadius: 'var(--radius-lg)',
-                      padding: '24px',
+                      borderRadius: 'var(--radius-xl)',
+                      padding: '32px 24px',
                       border: '1px solid var(--color-border-light)',
                       boxShadow: 'var(--shadow-card)',
-                      cursor: 'default'
+                      cursor: 'default',
+                      textAlign: 'center'
                     }}
                   >
+                    <div style={{ fontSize: '40px', marginBottom: '16px' }}>{l.icon}</div>
                     <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '12px'
-                    }}>
-                      <span style={{ fontSize: '28px' }}>{k.icon}</span>
-                      <span style={{
-                        padding: '3px 10px',
-                        borderRadius: '999px',
-                        backgroundColor: 'var(--color-primary-50)',
-                        color: 'var(--color-primary-600)',
-                        fontSize: '12px',
-                        fontWeight: 700
-                      }}>
-                        {k.bobot}
-                      </span>
-                    </div>
-                    <div style={{
+                      display: 'inline-block',
+                      padding: '3px 12px',
+                      borderRadius: '999px',
+                      backgroundColor: 'var(--color-primary-50)',
+                      color: 'var(--color-primary-600)',
                       fontSize: '11px',
                       fontWeight: 700,
-                      color: 'var(--color-primary-500)',
-                      marginBottom: '4px',
+                      marginBottom: '12px',
                       letterSpacing: '0.5px'
                     }}>
-                      {k.kode}
+                      LANGKAH {l.step}
                     </div>
                     <div style={{
-                      fontSize: '15px',
+                      fontSize: '18px',
                       fontWeight: 700,
                       color: 'var(--color-text)',
-                      marginBottom: '6px'
+                      marginBottom: '8px'
                     }}>
-                      {k.nama}
+                      {l.title}
                     </div>
                     <div style={{
                       fontSize: '13px',
                       color: 'var(--color-text-muted)',
-                      lineHeight: 1.5
+                      lineHeight: 1.6
                     }}>
-                      {k.desc}
+                      {l.desc}
                     </div>
                   </motion.div>
                 </AnimatedSection>
@@ -438,14 +439,14 @@ export default function HomePage() {
                   fontWeight: 800,
                   color: 'var(--color-text)'
                 }}>
-                  Tiga Level Kualitas
+                  Pilih Sesuai Budget Anda
                 </h2>
                 <p style={{
                   fontSize: '15px',
                   color: 'var(--color-text-secondary)',
                   marginTop: '8px'
                 }}>
-                  Sapi dikelompokkan berdasarkan skor SAW yang diperoleh
+                  Semua sapi sudah lolos seleksi. Pilih kelas yang sesuai kebutuhan Anda.
                 </p>
               </div>
             </AnimatedSection>
@@ -520,7 +521,7 @@ export default function HomePage() {
                 color: 'white',
                 marginBottom: '12px'
               }}>
-                Siap Memilih Sapi Qurban Terbaik?
+                Qurban Tahun Ini, Pilih Yang Terbaik
               </h2>
               <p style={{
                 fontSize: '15px',
@@ -528,8 +529,8 @@ export default function HomePage() {
                 marginBottom: '28px',
                 lineHeight: 1.6
               }}>
-                Lihat katalog sapi kami yang sudah dinilai secara transparan dengan metode SAW.
-                Anda yang menentukan pilihan terbaik.
+                Sapi sudah dinilai oleh tim ahli, Anda yang menentukan.
+                Mulai pilih sapi qurban berkualitas sekarang.
               </p>
               <Link href="/katalog" style={{
                 display: 'inline-block',

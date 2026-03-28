@@ -51,7 +51,7 @@ export default function Footer() {
                             fontSize: '12px',
                             color: 'var(--color-text-muted)'
                         }}>
-                            Baru Setiap Hari — Since 2012
+                            Baru Setiap Hari (Since 2012)
                         </div>
                     </div>
                 </div>
@@ -61,7 +61,7 @@ export default function Footer() {
                     fontSize: '12px',
                     color: 'var(--color-text-muted)'
                 }}>
-                    © {new Date().getFullYear()} PT Ghaffar Farm Bersaudara. Sistem Penunjang Keputusan.
+                    © {new Date().getFullYear()} PT Ghaffar Farm Bersaudara. Baru Setiap Hari.
                 </div>
             </div>
         </footer>
