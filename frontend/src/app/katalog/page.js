@@ -36,7 +36,10 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                         cursor: 'pointer',
                         boxShadow: 'var(--shadow-card)',
                         transition: 'border-color 0.2s ease',
-                        position: 'relative'
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%'
                     }}
                 >
                     {/* Rank Badge */}
@@ -91,7 +94,7 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                     </div>
 
                     {/* Info */}
-                    <div style={{ padding: '18px 20px' }}>
+                    <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                         <div style={{
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -109,24 +112,25 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                         </div>
 
                         {/* Jenis Sapi */}
-                        {sapi.jenisSapi && (
-                            <div style={{
-                                display: 'inline-block',
-                                padding: '3px 10px',
-                                borderRadius: '999px',
-                                backgroundColor: 'var(--color-primary-50)',
-                                color: 'var(--color-primary-700)',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                marginBottom: '10px',
-                                border: '1px solid var(--color-primary-100)'
-                            }}>
-                                🏷️ {sapi.jenisSapi.nama}
-                            </div>
-                        )}
+                        <div style={{ minHeight: '28px', marginBottom: '10px' }}>
+                            {sapi.jenisSapi && (
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '3px 10px',
+                                    borderRadius: '999px',
+                                    backgroundColor: 'var(--color-primary-50)',
+                                    color: 'var(--color-primary-700)',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    border: '1px solid var(--color-primary-100)'
+                                }}>
+                                    🏷️ {sapi.jenisSapi.nama}
+                                </div>
+                            )}
+                        </div>
 
                         {/* Score Bar */}
-                        <div style={{ marginBottom: '12px' }}>
+                        <div style={{ marginBottom: '12px', marginTop: 'auto' }}>
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
