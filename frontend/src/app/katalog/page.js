@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
-import api from '@/services/api';
+import api, { BACKEND_URL } from '@/services/api';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import BadgeGrade from '@/components/common/BadgeGrade';
@@ -14,7 +14,7 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
     const isInView = useInView(ref, { once: true, margin: '-30px' });
 
     const fotoUrl = sapi.foto_url
-        ? `http://localhost:5000${sapi.foto_url}`
+        ? `${BACKEND_URL}${sapi.foto_url}`
         : null;
 
     return (

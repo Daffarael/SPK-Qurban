@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import api from '@/services/api';
+import api, { BACKEND_URL } from '@/services/api';
 import ChecklistKriteria from '@/components/admin/ChecklistKriteria';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import BadgeGrade from '@/components/common/BadgeGrade';
@@ -160,7 +160,7 @@ export default function FormSapi({ mode = 'tambah' }) {
                 setChecklist(loadedChecklist);
                 setSkorTersimpan(loadedSkorTersimpan);
                 if (sapi.foto_url) {
-                    setFotoPreview(`http://localhost:5000${sapi.foto_url}`);
+                    setFotoPreview(`${BACKEND_URL}${sapi.foto_url}`);
                 }
             }
         } catch (err) {

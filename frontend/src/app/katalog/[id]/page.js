@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import api from '@/services/api';
+import api, { BACKEND_URL } from '@/services/api';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import BadgeGrade from '@/components/common/BadgeGrade';
@@ -72,7 +72,7 @@ export default function DetailSapiPage() {
     };
 
     const fotoUrl = sapi?.foto_url
-        ? `http://localhost:5000${sapi.foto_url}`
+        ? `${BACKEND_URL}${sapi.foto_url}`
         : null;
 
     if (loading) return (
@@ -189,7 +189,7 @@ export default function DetailSapiPage() {
                                 const nilai = sapi[k.key];
                                 return (
                                     <motion.div
-                                        key={k.kode}
+                                        key={k.key}
                                         initial={{ opacity: 0, x: -15 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.2 + i * 0.06 }}

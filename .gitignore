@@ -29,8 +29,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Uploads (user-generated content)
-uploads/
-
 # Misc
 *.log
