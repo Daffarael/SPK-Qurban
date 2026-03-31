@@ -14,99 +14,62 @@ function AnimatedSection({ children, delay = 0 }) {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       {children}
     </motion.div>
   );
 }
 
-function AnimatedCounter({ value, label, icon, delay = 0 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ duration: 0.5, delay }}
-      style={{
-        textAlign: 'center',
-        padding: '24px'
-      }}
-    >
-      <div style={{ fontSize: '32px', marginBottom: '8px' }}>{icon}</div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : {}}
-        transition={{ duration: 0.8, delay: delay + 0.2 }}
-        style={{
-          fontSize: '36px',
-          fontWeight: 800,
-          color: 'var(--color-primary-500)',
-          lineHeight: 1
-        }}
-      >
-        {value}
-      </motion.div>
-      <div style={{
-        fontSize: '13px',
-        color: 'var(--color-text-muted)',
-        fontWeight: 500,
-        marginTop: '6px'
-      }}>
-        {label}
-      </div>
-    </motion.div>
-  );
-}
+const STATS = [
+  { value: '✓', label: 'Dinilai Tim Ahli' },
+  { value: '3', label: 'Kelas Kualitas' },
+  { value: '100%', label: 'Transparan' },
+  { value: '48j', label: 'Masa Booking' }
+];
 
 const GRADES = [
   {
     grade: 'Platinum',
-    icon: '💎',
     range: 'Kualitas Premium',
     desc: 'Sapi pilihan terbaik dengan kondisi sehat, berat ideal, dan postur sempurna. Cocok untuk qurban premium.',
     color: '#818cf8',
-    bg: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)'
+    bg: '#eef2ff',
+    borderColor: '#c7d2fe'
   },
   {
     grade: 'Gold',
-    icon: '🥇',
     range: 'Kualitas Tinggi',
     desc: 'Sapi berkualitas tinggi yang sudah memenuhi semua standar qurban dengan sangat baik.',
-    color: '#f59e0b',
-    bg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
+    color: '#d97706',
+    bg: '#fffbeb',
+    borderColor: '#fde68a'
   },
   {
     grade: 'Silver',
-    icon: '🥈',
     range: 'Kualitas Baik',
     desc: 'Sapi berkualitas baik dengan harga lebih terjangkau. Tetap layak untuk qurban.',
     color: '#64748b',
-    bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+    bg: '#f8fafc',
+    borderColor: '#e2e8f0'
   }
 ];
 
 const LANGKAH = [
   {
     step: '01',
-    icon: '📋',
     title: 'Pilih Sapi',
     desc: 'Telusuri katalog sapi yang sudah dinilai kualitasnya oleh tim ahli kami.'
   },
   {
     step: '02',
-    icon: '📊',
     title: 'Bandingkan Kualitas',
     desc: 'Lihat skor, grade, berat, dan harga setiap sapi untuk perbandingan yang mudah.'
   },
   {
     step: '03',
-    icon: '📱',
     title: 'Pesan Langsung',
     desc: 'Booking sapi favorit Anda langsung dari website dalam hitungan detik.'
   }
@@ -119,11 +82,10 @@ export default function HomePage() {
     offset: ['start start', 'end start']
   });
 
-  // Parallax transforms for the hero image
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.25]);
-  const imageY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const imageY = useTransform(scrollYProgress, [0, 1], ['0%', '12%']);
   const overlayOpacity = useTransform(scrollYProgress, [0, 0.8], [0.45, 0.85]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '35%']);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
@@ -131,7 +93,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         {/* ==========================================
-            HERO SECTION - Full Background Image with Parallax
+            HERO SECTION
            ========================================== */}
         <section
           ref={heroRef}
@@ -146,7 +108,7 @@ export default function HomePage() {
             overflow: 'hidden'
           }}
         >
-          {/* Background Image with Parallax */}
+          {/* Background Image */}
           <motion.div
             style={{
               position: 'absolute',
@@ -161,25 +123,22 @@ export default function HomePage() {
               alt="Sapi Qurban Berkualitas - PT Ghaffar Farm Bersaudara"
               fill
               priority
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center'
-              }}
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
             />
           </motion.div>
 
-          {/* Dark gradient overlay - darkens on scroll */}
+          {/* Overlay */}
           <motion.div style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.6) 100%)',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.55) 100%)',
             zIndex: 1,
             opacity: overlayOpacity
           }} />
 
-          {/* Content on top of image - fades & slides up on scroll */}
-          <motion.div style={{ maxWidth: '750px', position: 'relative', zIndex: 2, y: contentY, opacity: contentOpacity }}>
-            {/* Badge */}
+          {/* Hero Content */}
+          <motion.div style={{ maxWidth: '680px', position: 'relative', zIndex: 2, y: contentY, opacity: contentOpacity }}>
+            {/* Company badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -189,20 +148,20 @@ export default function HomePage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '8px 20px',
+                padding: '6px 16px',
                 borderRadius: '999px',
-                background: 'rgba(255,255,255,0.1)',
-                color: 'rgba(255,255,255,0.95)',
+                background: 'rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.9)',
                 fontSize: '13px',
                 fontWeight: 500,
                 marginBottom: '24px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                backdropFilter: 'blur(16px)',
                 letterSpacing: '0.3px'
               }}>
-                <span style={{ fontWeight: 700 }}>PT Ghaffar Farm Bersaudara</span>
-                <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)' }} />
-                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Est. 2012</span>
+                <span style={{ fontWeight: 600 }}>PT Ghaffar Farm Bersaudara</span>
+                <span style={{ opacity: 0.4 }}>·</span>
+                <span style={{ opacity: 0.7 }}>Est. 2012</span>
               </span>
             </motion.div>
 
@@ -212,17 +171,17 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
               style={{
-                fontSize: 'clamp(34px, 5.5vw, 56px)',
+                fontSize: 'clamp(32px, 5vw, 52px)',
                 fontWeight: 800,
                 lineHeight: 1.15,
                 color: '#ffffff',
-                marginBottom: '20px',
-                textShadow: '0 2px 20px rgba(0,0,0,0.3)'
+                marginBottom: '18px',
+                letterSpacing: '-0.02em'
               }}
             >
               Pilih{' '}
               <span style={{
-                background: 'linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%)',
+                background: 'linear-gradient(135deg, #7dd3fc, #38bdf8)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
@@ -238,17 +197,16 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.6 }}
               style={{
-                fontSize: '17px',
-                color: 'rgba(255,255,255,0.85)',
+                fontSize: '16px',
+                color: 'rgba(255,255,255,0.8)',
                 lineHeight: 1.7,
-                marginBottom: '36px',
-                maxWidth: '580px',
-                margin: '0 auto 36px',
-                textShadow: '0 1px 8px rgba(0,0,0,0.2)'
+                marginBottom: '32px',
+                maxWidth: '520px',
+                margin: '0 auto 32px'
               }}
             >
-              Setiap sapi sudah dinilai kualitasnya oleh tim ahli kami.
-              Anda tinggal <strong style={{ color: '#ffffff' }}>pilih yang paling sesuai</strong> dengan kebutuhan dan budget Anda.
+              Setiap sapi dinilai kualitasnya oleh tim ahli.
+              Anda tinggal <strong style={{ color: '#ffffff' }}>pilih yang paling sesuai</strong> dengan kebutuhan Anda.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -256,31 +214,32 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
-              style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}
+              style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}
             >
               <Link href="/katalog" style={{
-                padding: '14px 32px',
-                borderRadius: 'var(--radius-md)',
-                background: 'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%)',
+                padding: '13px 28px',
+                borderRadius: '10px',
+                background: 'var(--color-primary-500)',
                 color: 'white',
                 textDecoration: 'none',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 600,
-                boxShadow: '0 4px 20px rgba(14, 165, 233, 0.4)',
-                transition: 'all 0.3s ease'
+                boxShadow: '0 4px 16px rgba(14, 165, 233, 0.35)',
+                transition: 'all 0.2s ease',
+                letterSpacing: '0.2px'
               }}>
-                Lihat Katalog Sapi →
+                Lihat Katalog →
               </Link>
               <Link href="/cek-pemesanan" style={{
-                padding: '14px 32px',
-                borderRadius: 'var(--radius-md)',
-                border: '1.5px solid rgba(255,255,255,0.4)',
-                backgroundColor: 'rgba(255,255,255,0.12)',
+                padding: '13px 28px',
+                borderRadius: '10px',
+                border: '1.5px solid rgba(255,255,255,0.3)',
+                backgroundColor: 'rgba(255,255,255,0.08)',
                 color: '#ffffff',
                 textDecoration: 'none',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 600,
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
                 backdropFilter: 'blur(8px)'
               }}>
                 Cek Pemesanan
@@ -290,28 +249,52 @@ export default function HomePage() {
         </section>
 
         {/* ==========================================
-            STATS SECTION
+            STATS BAR
            ========================================== */}
         <section style={{
-          padding: '40px 24px',
-          backgroundColor: 'var(--color-bg)'
+          padding: '0 24px',
+          backgroundColor: 'var(--color-bg)',
+          marginTop: '-32px',
+          position: 'relative',
+          zIndex: 3
         }}>
           <div style={{
-            maxWidth: '900px',
+            maxWidth: '800px',
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '8px',
             backgroundColor: 'var(--color-bg-card)',
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: '14px',
             border: '1px solid var(--color-border-light)',
-            boxShadow: 'var(--shadow-md)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
             overflow: 'hidden'
           }}>
-            <AnimatedCounter value="✓" label="Dinilai Ahli" icon="👨‍⚕️" delay={0} />
-            <AnimatedCounter value="3" label="Kelas Kualitas" icon="🏆" delay={0.1} />
-            <AnimatedCounter value="100%" label="Transparan" icon="🔍" delay={0.2} />
-            <AnimatedCounter value="48j" label="Masa Booking" icon="⏰" delay={0.3} />
+            {STATS.map((stat, i) => (
+              <AnimatedSection key={i} delay={i * 0.08}>
+                <div style={{
+                  textAlign: 'center',
+                  padding: '24px 16px',
+                  borderRight: i < STATS.length - 1 ? '1px solid var(--color-border-light)' : 'none'
+                }}>
+                  <div style={{
+                    fontSize: '24px',
+                    fontWeight: 800,
+                    color: 'var(--color-primary-500)',
+                    lineHeight: 1,
+                    marginBottom: '6px'
+                  }}>
+                    {stat.value}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--color-text-muted)',
+                    fontWeight: 500
+                  }}>
+                    {stat.label}
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
           </div>
         </section>
 
@@ -320,38 +303,41 @@ export default function HomePage() {
            ========================================== */}
         <section style={{
           padding: '80px 24px',
-          backgroundColor: 'var(--color-bg-secondary)'
+          backgroundColor: 'var(--color-bg)'
         }}>
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <AnimatedSection>
               <div style={{ textAlign: 'center', marginBottom: '48px' }}>
                 <span style={{
                   display: 'inline-block',
-                  padding: '4px 12px',
-                  borderRadius: '999px',
-                  backgroundColor: 'var(--color-primary-100)',
-                  color: 'var(--color-primary-700)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  marginBottom: '12px'
+                  padding: '4px 14px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--color-primary-50)',
+                  color: 'var(--color-primary-600)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  marginBottom: '14px',
+                  letterSpacing: '0.8px',
+                  textTransform: 'uppercase'
                 }}>
-                  CARA MEMILIH SAPI
+                  Cara Memilih
                 </span>
                 <h2 style={{
-                  fontSize: '30px',
+                  fontSize: '28px',
                   fontWeight: 800,
-                  color: 'var(--color-text)'
+                  color: 'var(--color-text)',
+                  letterSpacing: '-0.02em'
                 }}>
                   Semudah 3 Langkah
                 </h2>
                 <p style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   color: 'var(--color-text-secondary)',
                   marginTop: '8px',
-                  maxWidth: '500px',
+                  maxWidth: '420px',
                   margin: '8px auto 0'
                 }}>
-                  Tidak perlu repot. Pilih, bandingkan, dan pesan langsung dari rumah
+                  Pilih, bandingkan, dan pesan langsung dari rumah
                 </p>
               </div>
             </AnimatedSection>
@@ -359,39 +345,41 @@ export default function HomePage() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '20px'
+              gap: '16px'
             }}>
               {LANGKAH.map((l, i) => (
-                <AnimatedSection key={l.step} delay={i * 0.12}>
+                <AnimatedSection key={l.step} delay={i * 0.1}>
                   <motion.div
-                    whileHover={{ y: -4, boxShadow: '0 8px 25px rgba(0,0,0,0.08)' }}
+                    whileHover={{ y: -3 }}
                     transition={{ duration: 0.2 }}
                     style={{
                       backgroundColor: 'var(--color-bg-card)',
-                      borderRadius: 'var(--radius-xl)',
-                      padding: '32px 24px',
+                      borderRadius: '14px',
+                      padding: '28px 22px',
                       border: '1px solid var(--color-border-light)',
                       boxShadow: 'var(--shadow-card)',
                       cursor: 'default',
-                      textAlign: 'center'
+                      height: '100%'
                     }}
                   >
-                    <div style={{ fontSize: '40px', marginBottom: '16px' }}>{l.icon}</div>
+                    {/* Step number */}
                     <div style={{
-                      display: 'inline-block',
-                      padding: '3px 12px',
-                      borderRadius: '999px',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
                       backgroundColor: 'var(--color-primary-50)',
                       color: 'var(--color-primary-600)',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      marginBottom: '12px',
-                      letterSpacing: '0.5px'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: 800,
+                      marginBottom: '16px'
                     }}>
-                      LANGKAH {l.step}
+                      {l.step}
                     </div>
                     <div style={{
-                      fontSize: '18px',
+                      fontSize: '16px',
                       fontWeight: 700,
                       color: 'var(--color-text)',
                       marginBottom: '8px'
@@ -417,32 +405,35 @@ export default function HomePage() {
            ========================================== */}
         <section style={{
           padding: '80px 24px',
-          backgroundColor: 'var(--color-bg)'
+          backgroundColor: 'var(--color-bg-secondary)'
         }}>
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <AnimatedSection>
               <div style={{ textAlign: 'center', marginBottom: '48px' }}>
                 <span style={{
                   display: 'inline-block',
-                  padding: '4px 12px',
-                  borderRadius: '999px',
-                  backgroundColor: 'var(--color-primary-100)',
-                  color: 'var(--color-primary-700)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  marginBottom: '12px'
+                  padding: '4px 14px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--color-primary-50)',
+                  color: 'var(--color-primary-600)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  marginBottom: '14px',
+                  letterSpacing: '0.8px',
+                  textTransform: 'uppercase'
                 }}>
-                  SISTEM GRADING
+                  Sistem Grading
                 </span>
                 <h2 style={{
-                  fontSize: '30px',
+                  fontSize: '28px',
                   fontWeight: 800,
-                  color: 'var(--color-text)'
+                  color: 'var(--color-text)',
+                  letterSpacing: '-0.02em'
                 }}>
                   Pilih Sesuai Budget Anda
                 </h2>
                 <p style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   color: 'var(--color-text-secondary)',
                   marginTop: '8px'
                 }}>
@@ -454,45 +445,72 @@ export default function HomePage() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '20px'
+              gap: '16px'
             }}>
               {GRADES.map((g, i) => (
-                <AnimatedSection key={g.grade} delay={i * 0.12}>
+                <AnimatedSection key={g.grade} delay={i * 0.1}>
                   <motion.div
-                    whileHover={{ y: -6, boxShadow: `0 12px 30px ${g.color}20` }}
-                    transition={{ duration: 0.25 }}
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.2 }}
                     style={{
-                      background: g.bg,
-                      borderRadius: 'var(--radius-xl)',
-                      padding: '32px 24px',
-                      textAlign: 'center',
-                      border: `1px solid ${g.color}25`,
-                      cursor: 'default'
+                      backgroundColor: g.bg,
+                      borderRadius: '14px',
+                      padding: '28px 22px',
+                      border: `1px solid ${g.borderColor}`,
+                      cursor: 'default',
+                      height: '100%'
                     }}
                   >
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>{g.icon}</div>
+                    {/* Grade icon */}
                     <div style={{
-                      fontSize: '22px',
-                      fontWeight: 800,
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: `linear-gradient(135deg, ${g.color}18, ${g.color}08)`,
+                      border: `1.5px solid ${g.color}25`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '16px'
+                    }}>
+                      {g.grade === 'Platinum' ? (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 2L14.5 8.5L21 9.5L16.5 14.5L17.5 21L12 18L6.5 21L7.5 14.5L3 9.5L9.5 8.5L12 2Z" fill={g.color} opacity="0.85"/>
+                          <path d="M12 2L14.5 8.5L21 9.5L16.5 14.5L17.5 21L12 18L6.5 21L7.5 14.5L3 9.5L9.5 8.5L12 2Z" stroke={g.color} strokeWidth="1" strokeLinejoin="round" fill="none" opacity="0.4"/>
+                        </svg>
+                      ) : g.grade === 'Gold' ? (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" fill={g.color} opacity="0.85"/>
+                          <rect x="4" y="17" width="16" height="3" rx="1" fill={g.color} opacity="0.7"/>
+                          <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" stroke={g.color} strokeWidth="1" strokeLinejoin="round" fill="none" opacity="0.3"/>
+                        </svg>
+                      ) : (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 3L20 7V13C20 17.4 16.5 21.5 12 22.5C7.5 21.5 4 17.4 4 13V7L12 3Z" fill={g.color} opacity="0.85"/>
+                          <path d="M12 3L20 7V13C20 17.4 16.5 21.5 12 22.5C7.5 21.5 4 17.4 4 13V7L12 3Z" stroke={g.color} strokeWidth="1" strokeLinejoin="round" fill="none" opacity="0.3"/>
+                          <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: 700,
                       color: g.color,
-                      marginBottom: '6px'
+                      marginBottom: '4px'
                     }}>
                       {g.grade}
                     </div>
                     <div style={{
-                      display: 'inline-block',
-                      padding: '3px 12px',
-                      borderRadius: '999px',
-                      backgroundColor: `${g.color}18`,
-                      color: g.color,
                       fontSize: '12px',
-                      fontWeight: 700,
-                      marginBottom: '14px'
+                      fontWeight: 600,
+                      color: g.color,
+                      opacity: 0.7,
+                      marginBottom: '12px'
                     }}>
                       {g.range}
                     </div>
                     <div style={{
-                      fontSize: '14px',
+                      fontSize: '13px',
                       color: 'var(--color-text-secondary)',
                       lineHeight: 1.6
                     }}>
@@ -509,40 +527,40 @@ export default function HomePage() {
             CTA BOTTOM
            ========================================== */}
         <section style={{
-          padding: '80px 24px',
-          background: 'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%)',
+          padding: '72px 24px',
+          background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700))',
           textAlign: 'center'
         }}>
           <AnimatedSection>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
               <h2 style={{
-                fontSize: '28px',
+                fontSize: '26px',
                 fontWeight: 800,
                 color: 'white',
-                marginBottom: '12px'
+                marginBottom: '10px',
+                letterSpacing: '-0.02em'
               }}>
                 Qurban Tahun Ini, Pilih Yang Terbaik
               </h2>
               <p style={{
-                fontSize: '15px',
-                color: 'rgba(255,255,255,0.8)',
-                marginBottom: '28px',
-                lineHeight: 1.6
+                fontSize: '14px',
+                color: 'rgba(255,255,255,0.75)',
+                marginBottom: '24px',
+                lineHeight: 1.7
               }}>
                 Sapi sudah dinilai oleh tim ahli, Anda yang menentukan.
-                Mulai pilih sapi qurban berkualitas sekarang.
               </p>
               <Link href="/katalog" style={{
                 display: 'inline-block',
-                padding: '14px 36px',
-                borderRadius: 'var(--radius-md)',
+                padding: '12px 28px',
+                borderRadius: '10px',
                 backgroundColor: 'white',
                 color: 'var(--color-primary-600)',
                 textDecoration: 'none',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 700,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-                transition: 'all 0.3s ease'
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                transition: 'all 0.2s ease'
               }}>
                 Lihat Katalog Sekarang →
               </Link>
