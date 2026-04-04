@@ -17,10 +17,18 @@ function GradeIcon({ grade, size }) {
             </svg>
         );
     }
-    // Silver
+    if (grade === 'Silver') {
+        return (
+            <svg width={s} height={s} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M12 3L20 7V13C20 17.4 16.5 21.5 12 22.5C7.5 21.5 4 17.4 4 13V7L12 3Z" fill="currentColor" opacity="0.9"/>
+            </svg>
+        );
+    }
+    // Bronze
     return (
         <svg width={s} height={s} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-            <path d="M12 3L20 7V13C20 17.4 16.5 21.5 12 22.5C7.5 21.5 4 17.4 4 13V7L12 3Z" fill="currentColor" opacity="0.9"/>
+            <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.85"/>
+            <path d="M12 7V12L15 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
     );
 }
@@ -44,12 +52,19 @@ export default function BadgeGrade({ grade, size = 'md' }) {
             text: 'var(--color-silver)',
             border: 'var(--color-silver)',
             label: 'Silver'
+        },
+        Bronze: {
+            bg: 'var(--color-bronze-bg)',
+            text: 'var(--color-bronze)',
+            border: 'var(--color-bronze)',
+            label: 'Bronze'
         }
     };
 
     const c = config[grade];
 
     if (!c) {
+        // Fallback — seharusnya tidak terjadi karena semua sapi punya grade
         return (
             <span
                 style={{
@@ -64,7 +79,7 @@ export default function BadgeGrade({ grade, size = 'md' }) {
                     color: 'var(--color-text-muted)',
                 }}
             >
-                Tidak Lolos
+                —
             </span>
         );
     }
@@ -89,4 +104,3 @@ export default function BadgeGrade({ grade, size = 'md' }) {
         </span>
     );
 }
-

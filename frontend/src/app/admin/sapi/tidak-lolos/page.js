@@ -24,6 +24,7 @@ const item = {
 
 export default function SapiTidakLolosPage() {
     const [daftarSapi, setDaftarSapi] = useState([]);
+    const [semuaSapi, setSemuaSapi] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSapi, setSelectedSapi] = useState(null);
     const [showSAW, setShowSAW] = useState(false);
@@ -35,7 +36,9 @@ export default function SapiTidakLolosPage() {
     const fetchSapi = async () => {
         try {
             const res = await api.get('/sapi');
-            const tidakLolos = (res.data.data || []).filter(s => !s.skor_saw || s.skor_saw < 60);
+            const semua = res.data.data || [];
+            const tidakLolos = semua.filter(s => !s.skor_saw || s.skor_saw < 60);
+            setSemuaSapi(semua);
             setDaftarSapi(tidakLolos);
         } catch (err) {
             toast.error('Gagal mengambil data.');
@@ -260,7 +263,7 @@ export default function SapiTidakLolosPage() {
                 </motion.div>
             )}
 
-            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} />
+            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} semuaSapi={semuaSapi} />
         </div>
     );
 }

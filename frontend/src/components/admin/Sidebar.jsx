@@ -107,7 +107,6 @@ export default function Sidebar() {
         { href: '/admin/sapi', label: 'Daftar Sapi', icon: 'cow' },
         { href: '/admin/jenis-sapi', label: 'Jenis Sapi', icon: 'tag' },
         { href: '/admin/sapi/tambah', label: 'Tambah Sapi', icon: 'plus' },
-        { href: '/admin/sapi/tidak-lolos', label: 'Tidak Lolos', icon: 'warning' },
         { href: '/admin/pemesanan', label: 'Pemesanan', icon: 'order' },
     ];
 

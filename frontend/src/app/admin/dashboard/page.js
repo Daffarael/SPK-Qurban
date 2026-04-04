@@ -123,7 +123,7 @@ export default function DashboardPage() {
                 platinum: daftarSapi.filter(s => s.grade === 'Platinum').length,
                 gold: daftarSapi.filter(s => s.grade === 'Gold').length,
                 silver: daftarSapi.filter(s => s.grade === 'Silver').length,
-                tidakLolos: daftarSapi.filter(s => !s.skor_saw || s.skor_saw < 60).length,
+                bronze: daftarSapi.filter(s => s.grade === 'Bronze').length,
                 totalPemesanan: daftarPemesanan.length,
                 pending: daftarPemesanan.filter(p => p.status === 'Pending').length,
                 confirmed: daftarPemesanan.filter(p => p.status === 'Confirmed').length,
@@ -160,7 +160,7 @@ export default function DashboardPage() {
 
     if (loading) return <LoadingSpinner text="Memuat dashboard..." />;
 
-    const sapiLolos = (stats?.totalSapi || 0) - (stats?.tidakLolos || 0);
+    const totalGraded = stats?.totalSapi || 0;
 
     return (
         <div>
@@ -286,24 +286,16 @@ export default function DashboardPage() {
                             Distribusi Grade
                         </span>
                         <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--color-text-muted)' }}>
-                            {sapiLolos} sapi lolos
+                            {totalGraded} sapi
                         </span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <GradeBar label="Platinum" count={stats?.platinum || 0} total={sapiLolos} color="#818cf8" />
-                        <GradeBar label="Gold" count={stats?.gold || 0} total={sapiLolos} color="#f59e0b" />
-                        <GradeBar label="Silver" count={stats?.silver || 0} total={sapiLolos} color="#94a3b8" />
+                        <GradeBar label="Platinum" count={stats?.platinum || 0} total={totalGraded} color="#818cf8" />
+                        <GradeBar label="Gold" count={stats?.gold || 0} total={totalGraded} color="#f59e0b" />
+                        <GradeBar label="Silver" count={stats?.silver || 0} total={totalGraded} color="#94a3b8" />
+                        <GradeBar label="Bronze" count={stats?.bronze || 0} total={totalGraded} color="#cd7f32" />
                     </div>
-                    {(stats?.tidakLolos || 0) > 0 && (
-                        <div style={{
-                            marginTop: '14px', paddingTop: '12px',
-                            borderTop: '1px solid var(--color-border-light)',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                        }}>
-                            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Tidak Lolos</span>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>{stats?.tidakLolos}</span>
-                        </div>
-                    )}
+
                 </motion.div>
             </div>
 
@@ -512,8 +504,8 @@ export default function DashboardPage() {
                                 { label: 'Kelola Sapi', path: '/admin/sapi', icon: (
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                                 )},
-                                { label: 'Tidak Lolos', path: '/admin/sapi/tidak-lolos', icon: (
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                { label: 'Jenis Sapi', path: '/admin/jenis-sapi', icon: (
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2z" /><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" /></svg>
                                 )}
                             ].map(action => (
                                 <button

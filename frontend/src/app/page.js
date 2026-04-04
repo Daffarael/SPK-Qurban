@@ -25,7 +25,7 @@ function AnimatedSection({ children, delay = 0 }) {
 
 const STATS = [
   { value: '✓', label: 'Dinilai Tim Ahli' },
-  { value: '3', label: 'Kelas Kualitas' },
+  { value: '4', label: 'Kelas Kualitas' },
   { value: '100%', label: 'Transparan' },
   { value: '48j', label: 'Masa Booking' }
 ];
@@ -54,6 +54,14 @@ const GRADES = [
     color: '#64748b',
     bg: '#f8fafc',
     borderColor: '#e2e8f0'
+  },
+  {
+    grade: 'Bronze',
+    range: 'Kualitas Standar',
+    desc: 'Sapi dengan kualitas standar dan harga paling ekonomis. Tetap sah dan layak untuk qurban.',
+    color: '#cd7f32',
+    bg: '#fef7ed',
+    borderColor: '#fde68a'
   }
 ];
 
@@ -444,7 +452,7 @@ export default function HomePage() {
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '16px'
             }}>
               {GRADES.map((g, i) => (
@@ -483,6 +491,11 @@ export default function HomePage() {
                           <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" fill={g.color} opacity="0.85"/>
                           <rect x="4" y="17" width="16" height="3" rx="1" fill={g.color} opacity="0.7"/>
                           <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" stroke={g.color} strokeWidth="1" strokeLinejoin="round" fill="none" opacity="0.3"/>
+                        </svg>
+                      ) : g.grade === 'Bronze' ? (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="9" fill={g.color} opacity="0.85"/>
+                          <path d="M12 7V12L15 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       ) : (
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">

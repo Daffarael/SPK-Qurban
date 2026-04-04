@@ -28,6 +28,7 @@ const rowVariant = {
 
 export default function DaftarSapiPage() {
     const [daftarSapi, setDaftarSapi] = useState([]);
+    const [semuaSapi, setSemuaSapi] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSapi, setSelectedSapi] = useState(null);
     const [showSAW, setShowSAW] = useState(false);
@@ -41,8 +42,9 @@ export default function DaftarSapiPage() {
     const fetchSapi = async () => {
         try {
             const res = await api.get('/sapi');
-            const lolos = (res.data.data || []).filter(s => s.skor_saw >= 60);
-            setDaftarSapi(lolos);
+            const semua = res.data.data || [];
+            setSemuaSapi(semua);
+            setDaftarSapi(semua);
         } catch (err) {
             toast.error('Gagal mengambil data sapi.');
         } finally {
@@ -93,7 +95,7 @@ export default function DaftarSapiPage() {
                         Daftar Sapi
                     </h1>
                     <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                        {daftarSapi.length} sapi lolos syarat (skor ≥ 60) · Diurutkan skor tertinggi
+                        {daftarSapi.length} sapi terdaftar · Diurutkan skor tertinggi
                     </p>
                 </div>
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
@@ -271,7 +273,9 @@ export default function DaftarSapiPage() {
                                                     ? 'linear-gradient(90deg, #818cf8, #6366f1)'
                                                     : sapi.skor_saw >= 75
                                                     ? 'linear-gradient(90deg, #34d399, #10b981)'
-                                                    : 'linear-gradient(90deg, var(--color-primary-400), var(--color-primary-600))',
+                                                    : sapi.skor_saw >= 60
+                                                    ? 'linear-gradient(90deg, var(--color-primary-400), var(--color-primary-600))'
+                                                    : 'linear-gradient(90deg, #cd7f32, #b8690a)',
                                                 borderRadius: '999px'
                                             }}
                                         />
@@ -429,7 +433,8 @@ export default function DaftarSapiPage() {
                             {[
                                 { label: 'Platinum', count: daftarSapi.filter(s => s.grade === 'Platinum').length, color: '#818cf8' },
                                 { label: 'Gold', count: daftarSapi.filter(s => s.grade === 'Gold').length, color: '#f59e0b' },
-                                { label: 'Silver', count: daftarSapi.filter(s => s.grade === 'Silver').length, color: '#94a3b8' }
+                                { label: 'Silver', count: daftarSapi.filter(s => s.grade === 'Silver').length, color: '#94a3b8' },
+                                { label: 'Bronze', count: daftarSapi.filter(s => s.grade === 'Bronze').length, color: '#cd7f32' }
                             ].filter(g => g.count > 0).map(g => (
                                 <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: g.color }} />
@@ -443,7 +448,7 @@ export default function DaftarSapiPage() {
                 </motion.div>
             )}
 
-            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} />
+            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} semuaSapi={semuaSapi} />
             <ModalDetailSapi isOpen={showDetail} onClose={() => setShowDetail(false)} sapi={detailSapi} />
         </div>
     );

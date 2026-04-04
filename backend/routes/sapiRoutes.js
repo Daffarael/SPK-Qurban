@@ -7,7 +7,6 @@ const {
     getPublikSapi,
     getPublikSapiById,
     getAllSapi,
-    getSapiTidakLolos,
     createSapi,
     updateSapi,
     deleteSapi
@@ -23,7 +22,6 @@ router.get('/publik/:id', kadaluarsaMiddleware, getPublikSapiById);
 // ADMIN ROUTES (Protected)
 // ========================
 router.get('/', authMiddleware, getAllSapi);
-router.get('/tidak-lolos', authMiddleware, getSapiTidakLolos);
 router.post('/', authMiddleware, uploadFoto.single('foto'), createSapi);
 router.put('/:id', authMiddleware, uploadFoto.single('foto'), updateSapi);
 router.delete('/:id', authMiddleware, deleteSapi);

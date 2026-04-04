@@ -277,7 +277,7 @@ export default function KatalogPage() {
         }
     }, [daftarSapi, bounds, rangeInitialized]);
 
-    const grades = ['Semua', 'Platinum', 'Gold', 'Silver'];
+    const grades = ['Semua', 'Platinum', 'Gold', 'Silver', 'Bronze'];
 
     // Get unique jenis sapi from data
     const jenisOptions = ['Semua', ...Array.from(
@@ -390,7 +390,7 @@ export default function KatalogPage() {
                                         transition: 'all 0.2s ease'
                                     }}
                                 >
-                                    {g === 'Semua' ? '🐄 Semua' : g === 'Platinum' ? '💎 Platinum' : g === 'Gold' ? '🥇 Gold' : '🥈 Silver'}
+                                    {g === 'Semua' ? '🐄 Semua' : g === 'Platinum' ? '💎 Platinum' : g === 'Gold' ? '🥇 Gold' : g === 'Silver' ? '🥈 Silver' : '🥉 Bronze'}
                                 </button>
                             ))}
                         </div>

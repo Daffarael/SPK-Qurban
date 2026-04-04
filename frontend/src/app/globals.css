@@ -51,6 +51,8 @@
   --color-gold-bg: #fffbeb;
   --color-silver: #64748b;
   --color-silver-bg: #f1f5f9;
+  --color-bronze: #cd7f32;
+  --color-bronze-bg: #fef7ed;
 
   /* Status */
   --color-success: #10b981;
@@ -88,6 +90,7 @@
   --color-platinum-bg: #312e81;
   --color-gold-bg: #451a03;
   --color-silver-bg: #334155;
+  --color-bronze-bg: #451a03;
 }
 
 /* ============================================

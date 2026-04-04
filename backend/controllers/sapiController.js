@@ -1,14 +1,57 @@
 /**
- * Sapi Controller - CRUD + Auto SAW Calculation
+ * Sapi Controller - CRUD + Auto SAW Batch Calculation
  */
 
 const db = require('../models');
 const { sukses, gagal } = require('../utils/formatResponse');
-const { hitungSAWLengkap } = require('../utils/perhitunganSAW');
+const { getSkorBobot, hitungSAWBatch } = require('../utils/perhitunganSAW');
 const fs = require('fs');
 const path = require('path');
 
 const Sapi = db.Sapi;
+
+// ========================
+// HELPER: Recalculate semua sapi
+// ========================
+
+/**
+ * Hitung ulang skor SAW untuk SEMUA sapi dalam database.
+ * Dipanggil setiap kali ada create, update, atau delete sapi.
+ * Karena normalisasi SAW menggunakan max dari data,
+ * perubahan 1 sapi bisa mempengaruhi skor semua sapi lainnya.
+ */
+async function recalculateAllSapi() {
+    const allSapi = await Sapi.findAll();
+
+    if (allSapi.length === 0) return;
+
+    // Siapkan data untuk batch calculation
+    const daftarSapi = allSapi.map(s => ({
+        id: s.id,
+        c1: s.c1_bobot,
+        c2: s.c2_bcs,
+        c3: s.c3_postur,
+        c4: s.c4_vitalitas,
+        c5: s.c5_kaki,
+        c6: s.c6_temperamen
+    }));
+
+    // Hitung SAW batch (normalisasi dinamis)
+    const { hasil } = hitungSAWBatch(daftarSapi);
+
+    // Update setiap sapi dengan skor baru
+    for (let i = 0; i < allSapi.length; i++) {
+        const sapiData = allSapi[i];
+        const hasilSapi = hasil.find(h => h.id === sapiData.id);
+
+        if (hasilSapi) {
+            await sapiData.update({
+                skor_saw: hasilSapi.skor_saw,
+                grade: hasilSapi.grade
+            });
+        }
+    }
+}
 
 // ========================
 // PUBLIC ENDPOINTS
@@ -23,8 +66,7 @@ async function getPublikSapi(req, res, next) {
         const { berat_min, harga_max, grade } = req.query;
 
         const where = {
-            status: 'Available',
-            skor_saw: { [db.Sequelize.Op.gte]: 60 }
+            status: 'Available'
         };
 
         // Filter opsional
@@ -60,8 +102,7 @@ async function getPublikSapiById(req, res, next) {
         const sapi = await Sapi.findOne({
             where: {
                 id: req.params.id,
-                status: 'Available',
-                skor_saw: { [db.Sequelize.Op.gte]: 60 }
+                status: 'Available'
             },
             attributes: { exclude: ['createdAt', 'updatedAt'] },
             include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
@@ -98,32 +139,11 @@ async function getAllSapi(req, res, next) {
     }
 }
 
-/**
- * GET /api/sapi/tidak-lolos
- * Sapi skor < 60 (halaman khusus admin)
- */
-async function getSapiTidakLolos(req, res, next) {
-    try {
-        const daftarSapi = await Sapi.findAll({
-            where: {
-                [db.Sequelize.Op.or]: [
-                    { skor_saw: { [db.Sequelize.Op.lt]: 60 } },
-                    { skor_saw: null }
-                ]
-            },
-            order: [['skor_saw', 'DESC']],
-            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
-        });
 
-        return sukses(res, 'Data sapi tidak lolos berhasil diambil.', daftarSapi);
-    } catch (error) {
-        next(error);
-    }
-}
 
 /**
  * POST /api/sapi
- * Create sapi baru + upload foto + auto-calc SAW
+ * Create sapi baru + upload foto + recalculate ALL SAW scores
  */
 async function createSapi(req, res, next) {
     try {
@@ -156,29 +176,22 @@ async function createSapi(req, res, next) {
             return gagal(res, `Kode sapi '${kode_sapi}' sudah digunakan.`, 409);
         }
 
-        // Hitung SAW otomatis (C1 auto dari berat)
-        const hasilSAW = hitungSAWLengkap(
-            parseInt(berat_kg),
-            parseInt(c2_bcs),
-            parseInt(c3_postur),
-            parseInt(c4_vitalitas),
-            parseInt(c5_kaki),
-            parseInt(c6_temperamen)
-        );
+        // Hitung C1 dari berat (ini tetap individual)
+        const c1_bobot = getSkorBobot(parseInt(berat_kg));
 
-        // Siapkan data
+        // Siapkan data (skor_saw & grade sementara null, akan dihitung batch)
         const dataSapi = {
             kode_sapi,
             berat_kg: parseInt(berat_kg),
             harga: parseFloat(harga),
-            c1_bobot: hasilSAW.c1_bobot,
+            c1_bobot,
             c2_bcs: parseInt(c2_bcs),
             c3_postur: parseInt(c3_postur),
             c4_vitalitas: parseInt(c4_vitalitas),
             c5_kaki: parseInt(c5_kaki),
             c6_temperamen: parseInt(c6_temperamen),
-            skor_saw: hasilSAW.skor_saw,
-            grade: hasilSAW.grade,
+            skor_saw: 0,     // Sementara, akan di-recalculate
+            grade: null,      // Sementara, akan di-recalculate
             c2_checklist: parseChecklist(c2_checklist),
             c3_checklist: parseChecklist(c3_checklist),
             c4_checklist: parseChecklist(c4_checklist),
@@ -190,6 +203,12 @@ async function createSapi(req, res, next) {
 
         const sapi = await Sapi.create(dataSapi);
 
+        // Recalculate SAW untuk SEMUA sapi (karena max bisa berubah)
+        await recalculateAllSapi();
+
+        // Reload data terbaru setelah recalculate
+        await sapi.reload();
+
         return sukses(res, 'Sapi berhasil ditambahkan.', sapi, 201);
     } catch (error) {
         next(error);
@@ -198,7 +217,7 @@ async function createSapi(req, res, next) {
 
 /**
  * PUT /api/sapi/:id
- * Update sapi + recalc SAW
+ * Update sapi + recalculate ALL SAW scores
  */
 async function updateSapi(req, res, next) {
     try {
@@ -232,28 +251,19 @@ async function updateSapi(req, res, next) {
 
         // Tentukan nilai yang akan diupdate
         const beratBaru = berat_kg ? parseInt(berat_kg) : sapi.berat_kg;
-        const c2Baru = c2_bcs ? parseInt(c2_bcs) : sapi.c2_bcs;
-        const c3Baru = c3_postur ? parseInt(c3_postur) : sapi.c3_postur;
-        const c4Baru = c4_vitalitas ? parseInt(c4_vitalitas) : sapi.c4_vitalitas;
-        const c5Baru = c5_kaki ? parseInt(c5_kaki) : sapi.c5_kaki;
-        const c6Baru = c6_temperamen ? parseInt(c6_temperamen) : sapi.c6_temperamen;
+        const c1Baru = getSkorBobot(beratBaru);
 
-        // Recalculate SAW
-        const hasilSAW = hitungSAWLengkap(beratBaru, c2Baru, c3Baru, c4Baru, c5Baru, c6Baru);
-
-        // Update data
+        // Update data (tanpa skor_saw & grade, akan di-recalculate)
         const dataUpdate = {
             kode_sapi: kode_sapi || sapi.kode_sapi,
             berat_kg: beratBaru,
             harga: harga ? parseFloat(harga) : sapi.harga,
-            c1_bobot: hasilSAW.c1_bobot,
-            c2_bcs: c2Baru,
-            c3_postur: c3Baru,
-            c4_vitalitas: c4Baru,
-            c5_kaki: c5Baru,
-            c6_temperamen: c6Baru,
-            skor_saw: hasilSAW.skor_saw,
-            grade: hasilSAW.grade,
+            c1_bobot: c1Baru,
+            c2_bcs: c2_bcs ? parseInt(c2_bcs) : sapi.c2_bcs,
+            c3_postur: c3_postur ? parseInt(c3_postur) : sapi.c3_postur,
+            c4_vitalitas: c4_vitalitas ? parseInt(c4_vitalitas) : sapi.c4_vitalitas,
+            c5_kaki: c5_kaki ? parseInt(c5_kaki) : sapi.c5_kaki,
+            c6_temperamen: c6_temperamen ? parseInt(c6_temperamen) : sapi.c6_temperamen,
             c2_checklist: c2_checklist ? parseChecklist(c2_checklist) : sapi.c2_checklist,
             c3_checklist: c3_checklist ? parseChecklist(c3_checklist) : sapi.c3_checklist,
             c4_checklist: c4_checklist ? parseChecklist(c4_checklist) : sapi.c4_checklist,
@@ -276,6 +286,12 @@ async function updateSapi(req, res, next) {
 
         await sapi.update(dataUpdate);
 
+        // Recalculate SAW untuk SEMUA sapi
+        await recalculateAllSapi();
+
+        // Reload data terbaru
+        await sapi.reload();
+
         return sukses(res, 'Data sapi berhasil diperbarui.', sapi);
     } catch (error) {
         next(error);
@@ -284,7 +300,7 @@ async function updateSapi(req, res, next) {
 
 /**
  * DELETE /api/sapi/:id
- * Hapus sapi + hapus foto
+ * Hapus sapi + hapus foto + recalculate ALL SAW scores
  */
 async function deleteSapi(req, res, next) {
     try {
@@ -304,6 +320,9 @@ async function deleteSapi(req, res, next) {
 
         await sapi.destroy();
 
+        // Recalculate SAW untuk sapi yang tersisa (max bisa berubah)
+        await recalculateAllSapi();
+
         return sukses(res, 'Sapi berhasil dihapus.');
     } catch (error) {
         next(error);
@@ -314,7 +333,6 @@ module.exports = {
     getPublikSapi,
     getPublikSapiById,
     getAllSapi,
-    getSapiTidakLolos,
     createSapi,
     updateSapi,
     deleteSapi

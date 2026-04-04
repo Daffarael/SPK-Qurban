@@ -56,11 +56,6 @@ async function buatPemesanan(req, res, next) {
             return gagal(res, 'Sapi sudah di-booking atau terjual.', 400);
         }
 
-        // Cek skor >= 60 (hanya sapi lolos yang bisa di-booking)
-        if (!sapi.skor_saw || sapi.skor_saw < 60) {
-            return gagal(res, 'Sapi ini tidak memenuhi syarat untuk di-booking.', 400);
-        }
-
         // Generate kode & hitung kadaluarsa (48 jam)
         const kodePemesanan = await generateKodePemesanan();
         const sekarang = new Date();

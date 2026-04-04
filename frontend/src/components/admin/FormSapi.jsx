@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import BadgeGrade from '@/components/common/BadgeGrade';
 import toast from 'react-hot-toast';
 
-// Fungsi SAW (mirror backend)
+// Fungsi SAW (mirror backend — normalisasi dinamis)
 function getSkorBobot(beratKg) {
     if (beratKg > 600) return 5;
     if (beratKg >= 500) return 4;
@@ -17,12 +17,46 @@ function getSkorBobot(beratKg) {
     return 1;
 }
 
-function hitungPreviewSAW(berat, c2, c3, c4, c5, c6) {
+function hitungPreviewSAW(berat, c2, c3, c4, c5, c6, semuaSapi, editId) {
     const c1 = getSkorBobot(berat);
-    const bobot = { c1: 0.30, c2: 0.20, c3: 0.15, c4: 0.15, c5: 0.10, c6: 0.10 };
-    const skor = ((c1 / 5) * bobot.c1 + (c2 / 5) * bobot.c2 + (c3 / 5) * bobot.c3 + (c4 / 5) * bobot.c4 + (c5 / 5) * bobot.c5 + (c6 / 5) * bobot.c6) * 100;
+    if (c1 === 0 && c2 === 1 && c3 === 1 && c4 === 1 && c5 === 1 && c6 === 1 && semuaSapi.length === 0) {
+        return { c1: 0, skor: 0, grade: null };
+    }
+
+    const bobot = { c1: 0.25, c2: 0.20, c3: 0.15, c4: 0.25, c5: 0.10, c6: 0.05 };
+
+    // Gabungkan data sapi yang ada + sapi yang sedang diedit/dibuat
+    const sapiLain = semuaSapi
+        .filter(s => !editId || s.id !== parseInt(editId))
+        .map(s => ({
+            c1: s.c1_bobot, c2: s.c2_bcs, c3: s.c3_postur,
+            c4: s.c4_vitalitas, c5: s.c5_kaki, c6: s.c6_temperamen
+        }));
+
+    const sapiIni = { c1, c2, c3, c4, c5, c6 };
+    const gabungan = [...sapiLain, sapiIni];
+
+    // Cari max dari gabungan
+    const maxValues = {
+        c1: Math.max(...gabungan.map(s => s.c1)),
+        c2: Math.max(...gabungan.map(s => s.c2)),
+        c3: Math.max(...gabungan.map(s => s.c3)),
+        c4: Math.max(...gabungan.map(s => s.c4)),
+        c5: Math.max(...gabungan.map(s => s.c5)),
+        c6: Math.max(...gabungan.map(s => s.c6))
+    };
+
+    // Hitung skor untuk sapi ini
+    const skor = (
+        (maxValues.c1 > 0 ? c1 / maxValues.c1 : 0) * bobot.c1 +
+        (maxValues.c2 > 0 ? c2 / maxValues.c2 : 0) * bobot.c2 +
+        (maxValues.c3 > 0 ? c3 / maxValues.c3 : 0) * bobot.c3 +
+        (maxValues.c4 > 0 ? c4 / maxValues.c4 : 0) * bobot.c4 +
+        (maxValues.c5 > 0 ? c5 / maxValues.c5 : 0) * bobot.c5 +
+        (maxValues.c6 > 0 ? c6 / maxValues.c6 : 0) * bobot.c6
+    ) * 100;
     const skorRound = Math.round(skor * 100) / 100;
-    let grade = null;
+    let grade = 'Bronze';
     if (skorRound > 90) grade = 'Platinum';
     else if (skorRound >= 75) grade = 'Gold';
     else if (skorRound >= 60) grade = 'Silver';
@@ -38,6 +72,7 @@ export default function FormSapi({ mode = 'tambah' }) {
     const [fotoFile, setFotoFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [daftarJenisSapi, setDaftarJenisSapi] = useState([]);
+    const [semuaSapi, setSemuaSapi] = useState([]);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -110,10 +145,14 @@ export default function FormSapi({ mode = 'tambah' }) {
     // Hitung skor dari checklist: count(true) + 1
     const getSkorFromChecklist = (arr) => arr.filter(Boolean).length + 1;
 
-    // Load data jenis sapi
+    // Load data jenis sapi + semua sapi (untuk preview max dinamis)
     useEffect(() => {
         api.get('/jenis-sapi').then(res => {
             setDaftarJenisSapi(res.data.data);
+        }).catch(() => {});
+
+        api.get('/sapi').then(res => {
+            setSemuaSapi(res.data.data || []);
         }).catch(() => {});
     }, []);
 
@@ -170,14 +209,14 @@ export default function FormSapi({ mode = 'tambah' }) {
         }
     };
 
-    // Preview SAW real-time (skor dari checklist)
+    // Preview SAW real-time (skor dari checklist + max dinamis)
     const berat = parseInt(form.berat_kg) || 0;
     const skorC2 = getSkorFromChecklist(checklist.c2);
     const skorC3 = getSkorFromChecklist(checklist.c3);
     const skorC4 = getSkorFromChecklist(checklist.c4);
     const skorC5 = getSkorFromChecklist(checklist.c5);
     const skorC6 = getSkorFromChecklist(checklist.c6);
-    const preview = hitungPreviewSAW(berat, skorC2, skorC3, skorC4, skorC5, skorC6);
+    const preview = hitungPreviewSAW(berat, skorC2, skorC3, skorC4, skorC5, skorC6, semuaSapi, params?.id);
 
     const processFile = (file) => {
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -666,7 +705,7 @@ export default function FormSapi({ mode = 'tambah' }) {
                                         color: 'var(--color-text-muted)',
                                         marginTop: '12px'
                                     }}>
-                                        {preview.grade ? `Lolos syarat — grade ${preview.grade}` : 'Tidak memenuhi syarat (skor < 60)'}
+                                        {`Grade: ${preview.grade}`}
                                     </div>
                                 </>
                             )}
