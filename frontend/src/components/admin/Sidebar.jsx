@@ -161,19 +161,18 @@ export default function Sidebar() {
                 </div>
                 {!collapsed && (
                     <div style={{
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap',
-                        opacity: collapsed ? 0 : 1,
+                        opacity: 1,
                         transition: 'opacity 0.2s ease',
+                        flex: 1,
                     }}>
                         <div style={{
-                            fontSize: '15px',
+                            fontSize: '14px',
                             fontWeight: 700,
                             color: 'var(--color-text)',
                             letterSpacing: '-0.3px',
-                            lineHeight: 1.3,
+                            lineHeight: 1.2,
                         }}>
-                            Ghaffar Farm
+                            Ghaffar Farm Bersaudara
                         </div>
                         <div style={{
                             fontSize: '11px',

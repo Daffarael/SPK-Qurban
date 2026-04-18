@@ -5,9 +5,12 @@ import { FiCheck } from 'react-icons/fi';
 const DESKRIPSI_SKOR = {
     1: 'Sangat Buruk',
     2: 'Buruk',
-    3: 'Cukup',
-    4: 'Baik',
-    5: 'Sangat Baik'
+    3: 'Kurang',
+    4: 'Cukup',
+    5: 'Cukup Baik',
+    6: 'Baik',
+    7: 'Sangat Baik',
+    8: 'Sempurna'
 };
 
 /**
@@ -15,14 +18,14 @@ const DESKRIPSI_SKOR = {
  * 
  * Props:
  * - label: string — judul kriteria
- * - items: string[] — 4 pernyataan checkbox
+ * - items: string[] — 7 pernyataan checkbox
  * - checked: boolean[] — status checked [true, false, ...]
  * - onChange: (newChecked: boolean[]) => void
  * - skorTersimpan: number|null — skor lama untuk info saat edit
  */
 export default function ChecklistKriteria({ label, items, checked, onChange, skorTersimpan = null }) {
     const jumlahChecked = checked.filter(Boolean).length;
-    const skor = jumlahChecked + 1; // 0→1, 1→2, 2→3, 3→4, 4→5
+    const skor = jumlahChecked + 1; // 0→1, 1→2, ... 7→8
 
     const handleToggle = (index) => {
         const newChecked = [...checked];
@@ -32,8 +35,8 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
 
     // Warna badge skor
     const getSkorColor = (s) => {
-        if (s >= 5) return { bg: '#059669', text: '#ffffff' };
-        if (s >= 4) return { bg: '#2563eb', text: '#ffffff' };
+        if (s >= 7) return { bg: '#059669', text: '#ffffff' };
+        if (s >= 5) return { bg: '#2563eb', text: '#ffffff' };
         if (s >= 3) return { bg: '#d97706', text: '#ffffff' };
         return { bg: '#dc2626', text: '#ffffff' };
     };
@@ -74,7 +77,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
                         minWidth: '42px',
                         justifyContent: 'center'
                     }}>
-                        {skor}/5
+                        {skor}/8
                     </span>
                     <span style={{
                         fontSize: '11px',
@@ -104,7 +107,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
                     gap: '6px'
                 }}>
                     <span style={{ fontSize: '14px' }}>ℹ️</span>
-                    Skor tersimpan sebelumnya: <strong>{skorTersimpan}/5</strong>
+                    Skor tersimpan sebelumnya: <strong>{skorTersimpan}/8</strong>
                     {jumlahChecked === 0 && ' — Ceklis ulang untuk memperbarui.'}
                 </div>
             )}
@@ -181,7 +184,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
             }}>
                 <div style={{
                     height: '100%',
-                    width: `${(jumlahChecked / 4) * 100}%`,
+                    width: `${(jumlahChecked / items.length) * 100}%`,
                     backgroundColor: skorColor.bg,
                     borderRadius: '2px',
                     transition: 'all 0.3s ease'

@@ -209,8 +209,8 @@ export default function PemesananPage() {
                                                 borderRadius: '999px',
                                                 fontSize: '11px',
                                                 fontWeight: 700,
-                                                backgroundColor: p.sapi.grade === 'Platinum' ? 'var(--color-platinum-bg)' : p.sapi.grade === 'Gold' ? 'var(--color-gold-bg)' : 'var(--color-silver-bg)',
-                                                color: p.sapi.grade === 'Platinum' ? 'var(--color-platinum)' : p.sapi.grade === 'Gold' ? 'var(--color-gold)' : 'var(--color-silver)'
+                                                backgroundColor: p.sapi.grade === 'Platinum' ? 'var(--color-platinum-bg)' : p.sapi.grade === 'Gold' ? 'var(--color-gold-bg)' : p.sapi.grade === 'Bronze' ? 'var(--color-bronze-bg)' : 'var(--color-silver-bg)',
+                                                color: p.sapi.grade === 'Platinum' ? 'var(--color-platinum)' : p.sapi.grade === 'Gold' ? 'var(--color-gold)' : p.sapi.grade === 'Bronze' ? 'var(--color-bronze)' : 'var(--color-silver)'
                                             }}>
                                                 {p.sapi.grade}
                                             </span>

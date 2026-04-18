@@ -72,7 +72,8 @@ function cariMaxValues(daftarSapi) {
  * Hitung skor SAW untuk 1 sapi, dengan max values yang sudah diketahui
  * Rumus: Σ (ci / max_ci × wi) × 100
  * 
- * @param {number} c1-c6 - Skor kriteria (1-5)
+ * @param {number} c1 - Skor C1 Bobot Hidup (1-5)
+ * @param {number} c2-c6 - Skor kriteria (1-8)
  * @param {Object} maxValues - { c1: max, c2: max, ... }
  * @returns {number} Skor SAW (0-100), dibulatkan 2 desimal
  */
@@ -102,7 +103,7 @@ function hitungSAW(c1, c2, c3, c4, c5, c6, maxValues) {
  * Hitung SAW batch: semua sapi sekaligus (normalisasi dinamis)
  * Fungsi utama yang dipanggil dari controller
  * 
- * @param {Array} daftarSapi - Array of { id, c1, c2, c3, c4, c5, c6 }
+ * @param {Array} daftarSapi - Array of { id, c1 (1-5), c2-c6 (1-8) }
  * @returns {Object} { hasil: [{ id, skor_saw, grade }, ...], maxValues }
  */
 function hitungSAWBatch(daftarSapi) {

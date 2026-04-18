@@ -82,7 +82,7 @@ async function getPublikSapi(req, res, next) {
 
         const daftarSapi = await Sapi.findAll({
             where,
-            order: [['skor_saw', 'DESC']],
+            order: [['skor_saw', 'DESC'], ['berat_kg', 'DESC']],
             attributes: { exclude: ['createdAt', 'updatedAt'] },
             include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
@@ -129,7 +129,7 @@ async function getPublikSapiById(req, res, next) {
 async function getAllSapi(req, res, next) {
     try {
         const daftarSapi = await Sapi.findAll({
-            order: [['skor_saw', 'DESC']],
+            order: [['skor_saw', 'DESC'], ['berat_kg', 'DESC']],
             include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
 

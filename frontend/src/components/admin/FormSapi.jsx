@@ -94,13 +94,13 @@ export default function FormSapi({ mode = 'tambah' }) {
         jenis_sapi_id: ''
     });
 
-    // Checklist state: 5 kriteria × 4 pernyataan
+    // Checklist state: 5 kriteria × 7 pernyataan
     const [checklist, setChecklist] = useState({
-        c2: [false, false, false, false],
-        c3: [false, false, false, false],
-        c4: [false, false, false, false],
-        c5: [false, false, false, false],
-        c6: [false, false, false, false]
+        c2: [false, false, false, false, false, false, false],
+        c3: [false, false, false, false, false, false, false],
+        c4: [false, false, false, false, false, false, false],
+        c5: [false, false, false, false, false, false, false],
+        c6: [false, false, false, false, false, false, false]
     });
 
     // Skor tersimpan (untuk info di mode edit, data lama tanpa checklist)
@@ -114,31 +114,46 @@ export default function FormSapi({ mode = 'tambah' }) {
             'Tulang rusuk tidak terlihat/teraba',
             'Pangkal ekor tertutup lemak tebal',
             'Leher terlihat penuh dan tebal',
-            'Daging paha membulat penuh'
+            'Daging paha membulat penuh',
+            'Perut tidak terlalu buncit/kembung (proporsional)',
+            'Area punuk (hump) berisi dan tidak kendur',
+            'Lapisan lemak bawah kulit teraba merata di seluruh badan'
         ],
         c3: [
             'Punggung lurus sempurna (tidak melengkung/bengkok)',
             'Dada terlihat dalam dan lebar',
             'Tanduk utuh dan simetris',
-            'Postur badan panjang dan proporsional (berbentuk balok)'
+            'Postur badan panjang dan proporsional (berbentuk balok)',
+            'Kepala proporsional dengan ukuran badan',
+            'Leher kokoh dan menyatu baik dengan bahu',
+            'Pinggul lebar dan simetris (tidak miring)'
         ],
         c4: [
             'Mata bening, bersinar, dan tidak berair/belekan',
             'Napas teratur (tidak ngos-ngosan saat cuaca normal)',
             'Area anus dan pencernaan bersih (tidak mencret)',
-            'Bulu mengkilap, kulit lentur, bebas kutu/jamur'
+            'Bulu mengkilap, kulit lentur, bebas kutu/jamur',
+            'Hidung lembab dan bersih (tidak ada lendir berlebihan)',
+            'Gusi dan selaput lendir berwarna merah muda sehat',
+            'Nafsu makan aktif dan gerakan mengunyah (ruminansi) terlihat normal'
         ],
         c5: [
             'Keempat kaki tegak lurus sempurna (tidak bentuk X atau O)',
             'Kuku utuh, keras, dan tidak ada infeksi/pembengkakan',
             'Langkah berjalan mantap (tidak diseret/pincang)',
-            'Berdiri kokoh (kaki tidak gemetar saat menopang badan)'
+            'Berdiri kokoh (kaki tidak gemetar saat menopang badan)',
+            'Persendian lutut dan tumit tidak bengkak/meradang',
+            'Telapak kuku rata dan tidak tumbuh berlebihan',
+            'Mampu berdiri dan duduk dengan gerakan yang mudah dan lancar'
         ],
         c6: [
             'Tenang saat didekati banyak orang',
             'Kepala mudah dikendalikan saat dipegang tali keluhnya',
             'Tidak sering menghentakkan kaki ke tanah',
-            'Tidak menunjukkan gestur agresif/menyeruduk'
+            'Tidak menunjukkan gestur agresif/menyeruduk',
+            'Tidak gelisah berlebihan saat diperiksa/disentuh',
+            'Tetap tenang saat lingkungan ramai atau berisik',
+            'Mudah digiring/dipindahkan tanpa perlawanan berarti'
         ]
     };
 

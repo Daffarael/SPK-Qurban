@@ -7,9 +7,64 @@ import Link from 'next/link';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 
+/* ─── Animation Variants ─── */
+const fadeUp = {
+  hidden: { opacity: 0, y: 40, filter: 'blur(6px)' },
+  visible: (delay = 0) => ({
+    opacity: 1, y: 0, filter: 'blur(0px)',
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }
+  })
+};
+
+const fadeLeft = {
+  hidden: { opacity: 0, x: -50, filter: 'blur(4px)' },
+  visible: (delay = 0) => ({
+    opacity: 1, x: 0, filter: 'blur(0px)',
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }
+  })
+};
+
+const fadeRight = {
+  hidden: { opacity: 0, x: 50, filter: 'blur(4px)' },
+  visible: (delay = 0) => ({
+    opacity: 1, x: 0, filter: 'blur(0px)',
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }
+  })
+};
+
+const scaleUp = {
+  hidden: { opacity: 0, scale: 0.85, filter: 'blur(4px)' },
+  visible: (delay = 0) => ({
+    opacity: 1, scale: 1, filter: 'blur(0px)',
+    transition: { duration: 0.6, delay, ease: [0.34, 1.56, 0.64, 1] }
+  })
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+};
+
+const cardVariant = {
+  hidden: { opacity: 0, y: 30, scale: 0.96 },
+  visible: {
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+  }
+};
+
+/* ─── Hook helper ─── */
+function useReveal(margin = '-60px') {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: false, margin });
+  return [ref, isInView];
+}
+
+
+
 function AnimatedSection({ children, delay = 0 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { once: false, margin: '-50px' });
 
   return (
     <motion.div
@@ -43,9 +98,9 @@ const GRADES = [
     grade: 'Gold',
     range: 'Kualitas Tinggi',
     desc: 'Sapi berkualitas tinggi yang sudah memenuhi semua standar qurban dengan sangat baik.',
-    color: '#d97706',
-    bg: '#fffbeb',
-    borderColor: '#fde68a'
+    color: '#eab308',
+    bg: '#fefce8',
+    borderColor: '#fde047'
   },
   {
     grade: 'Silver',
@@ -59,9 +114,9 @@ const GRADES = [
     grade: 'Bronze',
     range: 'Kualitas Standar',
     desc: 'Sapi dengan kualitas standar dan harga paling ekonomis. Tetap sah dan layak untuk qurban.',
-    color: '#cd7f32',
-    bg: '#fef7ed',
-    borderColor: '#fde68a'
+    color: '#b45309',
+    bg: '#fff7ed',
+    borderColor: '#fdba74'
   }
 ];
 
@@ -107,12 +162,15 @@ export default function HomePage() {
           ref={heroRef}
           style={{
             position: 'relative',
-            height: 'calc(100vh - 70px)',
+            height: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
-            padding: '60px 24px',
+            paddingTop: '80px',
+            paddingBottom: '180px',
+            paddingLeft: '24px',
+            paddingRight: '24px',
             overflow: 'hidden'
           }}
         >
@@ -146,32 +204,7 @@ export default function HomePage() {
 
           {/* Hero Content */}
           <motion.div style={{ maxWidth: '680px', position: 'relative', zIndex: 2, y: contentY, opacity: contentOpacity }}>
-            {/* Company badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 16px',
-                borderRadius: '999px',
-                background: 'rgba(255,255,255,0.08)',
-                color: 'rgba(255,255,255,0.9)',
-                fontSize: '13px',
-                fontWeight: 500,
-                marginBottom: '24px',
-                border: '1px solid rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(16px)',
-                letterSpacing: '0.3px'
-              }}>
-                <span style={{ fontWeight: 600 }}>PT Ghaffar Farm Bersaudara</span>
-                <span style={{ opacity: 0.4 }}>·</span>
-                <span style={{ opacity: 0.7 }}>Est. 2012</span>
-              </span>
-            </motion.div>
+
 
             {/* Heading */}
             <motion.h1
@@ -236,19 +269,19 @@ export default function HomePage() {
                 transition: 'all 0.2s ease',
                 letterSpacing: '0.2px'
               }}>
-                Lihat Katalog →
+                Lihat Katalog
               </Link>
               <Link href="/cek-pemesanan" style={{
                 padding: '13px 28px',
                 borderRadius: '10px',
-                border: '1.5px solid rgba(255,255,255,0.3)',
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                color: '#ffffff',
+                border: 'none',
+                backgroundColor: '#ffffff',
+                color: 'var(--color-primary-600)',
                 textDecoration: 'none',
                 fontSize: '14px',
                 fontWeight: 600,
                 transition: 'all 0.2s ease',
-                backdropFilter: 'blur(8px)'
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
               }}>
                 Cek Pemesanan
               </Link>
@@ -259,51 +292,65 @@ export default function HomePage() {
         {/* ==========================================
             STATS BAR
            ========================================== */}
+
         <section style={{
-          padding: '0 24px',
+          padding: '32px 24px',
           backgroundColor: 'var(--color-bg)',
-          marginTop: '-32px',
           position: 'relative',
           zIndex: 3
         }}>
-          <div style={{
-            maxWidth: '800px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            backgroundColor: 'var(--color-bg-card)',
-            borderRadius: '14px',
-            border: '1px solid var(--color-border-light)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-            overflow: 'hidden'
-          }}>
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: '-40px' }}
+            style={{
+              maxWidth: '800px',
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              backgroundColor: 'var(--color-bg-card)',
+              borderRadius: '14px',
+              border: '1px solid var(--color-border-light)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              overflow: 'hidden'
+            }}
+          >
             {STATS.map((stat, i) => (
-              <AnimatedSection key={i} delay={i * 0.08}>
-                <div style={{
+              <motion.div
+                key={i}
+                variants={cardVariant}
+                style={{
                   textAlign: 'center',
                   padding: '24px 16px',
                   borderRight: i < STATS.length - 1 ? '1px solid var(--color-border-light)' : 'none'
-                }}>
-                  <div style={{
+                }}
+              >
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+                  style={{
                     fontSize: '24px',
                     fontWeight: 800,
                     color: 'var(--color-primary-500)',
                     lineHeight: 1,
                     marginBottom: '6px'
-                  }}>
-                    {stat.value}
-                  </div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: 'var(--color-text-muted)',
-                    fontWeight: 500
-                  }}>
-                    {stat.label}
-                  </div>
+                  }}
+                >
+                  {stat.value}
+                </motion.div>
+                <div style={{
+                  fontSize: '12px',
+                  color: 'var(--color-text-muted)',
+                  fontWeight: 500
+                }}>
+                  {stat.label}
                 </div>
-              </AnimatedSection>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         {/* ==========================================
@@ -314,9 +361,22 @@ export default function HomePage() {
           backgroundColor: 'var(--color-bg)'
         }}>
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <AnimatedSection>
-              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <span style={{
+            {/* Section heading - fade+blur up */}
+            <motion.div
+              variants={fadeUp}
+              custom={0}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, margin: '-60px' }}
+              style={{ textAlign: 'center', marginBottom: '48px' }}
+            >
+              <motion.span
+                variants={scaleUp}
+                custom={0.1}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false }}
+                style={{
                   display: 'inline-block',
                   padding: '4px 14px',
                   borderRadius: '6px',
@@ -327,39 +387,47 @@ export default function HomePage() {
                   marginBottom: '14px',
                   letterSpacing: '0.8px',
                   textTransform: 'uppercase'
-                }}>
-                  Cara Memilih
-                </span>
-                <h2 style={{
-                  fontSize: '28px',
-                  fontWeight: 800,
-                  color: 'var(--color-text)',
-                  letterSpacing: '-0.02em'
-                }}>
-                  Semudah 3 Langkah
-                </h2>
-                <p style={{
-                  fontSize: '14px',
-                  color: 'var(--color-text-secondary)',
-                  marginTop: '8px',
-                  maxWidth: '420px',
-                  margin: '8px auto 0'
-                }}>
-                  Pilih, bandingkan, dan pesan langsung dari rumah
-                </p>
-              </div>
-            </AnimatedSection>
+                }}
+              >
+                Cara Memilih
+              </motion.span>
+              <h2 style={{
+                fontSize: '28px',
+                fontWeight: 800,
+                color: 'var(--color-text)',
+                letterSpacing: '-0.02em'
+              }}>
+                Semudah 3 Langkah
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--color-text-secondary)',
+                marginTop: '8px',
+                maxWidth: '420px',
+                margin: '8px auto 0'
+              }}>
+                Pilih, bandingkan, dan pesan langsung dari rumah
+              </p>
+            </motion.div>
 
+            {/* Cards - slide dari kiri, tengah, kanan */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '16px'
             }}>
               {LANGKAH.map((l, i) => (
-                <AnimatedSection key={l.step} delay={i * 0.1}>
+                <motion.div
+                  key={l.step}
+                  variants={i === 0 ? fadeLeft : i === 2 ? fadeRight : fadeUp}
+                  custom={i * 0.12}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false, margin: '-40px' }}
+                >
                   <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ duration: 0.2 }}
+                    whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(14,165,233,0.15)' }}
+                    transition={{ duration: 0.25 }}
                     style={{
                       backgroundColor: 'var(--color-bg-card)',
                       borderRadius: '14px',
@@ -370,22 +438,27 @@ export default function HomePage() {
                       height: '100%'
                     }}
                   >
-                    {/* Step number */}
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '10px',
-                      backgroundColor: 'var(--color-primary-50)',
-                      color: 'var(--color-primary-600)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: 800,
-                      marginBottom: '16px'
-                    }}>
+                    <motion.div
+                      initial={{ scale: 0, rotate: -10 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      viewport={{ once: false }}
+                      transition={{ duration: 0.45, delay: 0.2 + i * 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--color-primary-50)',
+                        color: 'var(--color-primary-600)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        marginBottom: '16px'
+                      }}
+                    >
                       {l.step}
-                    </div>
+                    </motion.div>
                     <div style={{
                       fontSize: '16px',
                       fontWeight: 700,
@@ -402,7 +475,7 @@ export default function HomePage() {
                       {l.desc}
                     </div>
                   </motion.div>
-                </AnimatedSection>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -416,9 +489,22 @@ export default function HomePage() {
           backgroundColor: 'var(--color-bg-secondary)'
         }}>
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <AnimatedSection>
-              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <span style={{
+            {/* Heading - fade+blur up */}
+            <motion.div
+              variants={fadeUp}
+              custom={0}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, margin: '-60px' }}
+              style={{ textAlign: 'center', marginBottom: '48px' }}
+            >
+              <motion.span
+                variants={scaleUp}
+                custom={0.1}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false }}
+                style={{
                   display: 'inline-block',
                   padding: '4px 14px',
                   borderRadius: '6px',
@@ -429,37 +515,44 @@ export default function HomePage() {
                   marginBottom: '14px',
                   letterSpacing: '0.8px',
                   textTransform: 'uppercase'
-                }}>
-                  Sistem Grading
-                </span>
-                <h2 style={{
-                  fontSize: '28px',
-                  fontWeight: 800,
-                  color: 'var(--color-text)',
-                  letterSpacing: '-0.02em'
-                }}>
-                  Pilih Sesuai Budget Anda
-                </h2>
-                <p style={{
-                  fontSize: '14px',
-                  color: 'var(--color-text-secondary)',
-                  marginTop: '8px'
-                }}>
-                  Semua sapi sudah lolos seleksi. Pilih kelas yang sesuai kebutuhan Anda.
-                </p>
-              </div>
-            </AnimatedSection>
+                }}
+              >
+                Sistem Grading
+              </motion.span>
+              <h2 style={{
+                fontSize: '28px',
+                fontWeight: 800,
+                color: 'var(--color-text)',
+                letterSpacing: '-0.02em'
+              }}>
+                Pilih Sesuai Budget Anda
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--color-text-secondary)',
+                marginTop: '8px'
+              }}>
+                Semua sapi sudah lolos seleksi. Pilih kelas yang sesuai kebutuhan Anda.
+              </p>
+            </motion.div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '16px'
-            }}>
+            {/* Grade cards - stagger cascade */}
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, margin: '-40px' }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px'
+              }}
+            >
               {GRADES.map((g, i) => (
-                <AnimatedSection key={g.grade} delay={i * 0.1}>
+                <motion.div key={g.grade} variants={cardVariant}>
                   <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ duration: 0.2 }}
+                    whileHover={{ y: -8, boxShadow: `0 16px 40px ${g.color}22` }}
+                    transition={{ duration: 0.25 }}
                     style={{
                       backgroundColor: g.bg,
                       borderRadius: '14px',
@@ -530,9 +623,9 @@ export default function HomePage() {
                       {g.desc}
                     </div>
                   </motion.div>
-                </AnimatedSection>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -542,27 +635,62 @@ export default function HomePage() {
         <section style={{
           padding: '72px 24px',
           background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700))',
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <AnimatedSection>
-            <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-              <h2 style={{
+          {/* bg decoration */}
+          <div style={{
+            position: 'absolute', inset: 0, opacity: 0.06,
+            backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 30%, white 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }} />
+          <motion.div
+            variants={scaleUp}
+            custom={0}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: '-60px' }}
+            style={{ maxWidth: '500px', margin: '0 auto', position: 'relative', zIndex: 1 }}
+          >
+            <motion.h2
+              variants={fadeUp}
+              custom={0.1}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              style={{
                 fontSize: '26px',
                 fontWeight: 800,
                 color: 'white',
                 marginBottom: '10px',
                 letterSpacing: '-0.02em'
-              }}>
-                Qurban Tahun Ini, Pilih Yang Terbaik
-              </h2>
-              <p style={{
+              }}
+            >
+              Qurban Tahun Ini, Pilih Yang Terbaik
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              custom={0.2}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              style={{
                 fontSize: '14px',
                 color: 'rgba(255,255,255,0.75)',
                 marginBottom: '24px',
                 lineHeight: 1.7
-              }}>
-                Sapi sudah dinilai oleh tim ahli, Anda yang menentukan.
-              </p>
+              }}
+            >
+              Sapi sudah dinilai oleh tim ahli, Anda yang menentukan.
+            </motion.p>
+            <motion.div
+              variants={scaleUp}
+              custom={0.3}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+            >
               <Link href="/katalog" style={{
                 display: 'inline-block',
                 padding: '12px 28px',
@@ -577,8 +705,8 @@ export default function HomePage() {
               }}>
                 Lihat Katalog Sekarang →
               </Link>
-            </div>
-          </AnimatedSection>
+            </motion.div>
+          </motion.div>
         </section>
       </main>
       <Footer />

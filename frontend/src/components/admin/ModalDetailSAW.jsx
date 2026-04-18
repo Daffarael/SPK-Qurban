@@ -139,11 +139,29 @@ export default function ModalDetailSAW({ isOpen, onClose, sapi, semuaSapi }) {
                             <td colSpan="5" style={{
                                 ...cellStyle,
                                 textAlign: 'right',
+                                fontWeight: 600,
+                                color: 'var(--color-text-secondary)'
+                            }}>
+                                Total Asli (Σ Hasil) =
+                            </td>
+                            <td style={{
+                                ...cellStyle,
+                                textAlign: 'center',
+                                fontWeight: 700,
+                                color: 'var(--color-text)'
+                            }}>
+                                {(sapi.skor_saw / 100).toFixed(4)}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan="5" style={{
+                                ...cellStyle,
+                                textAlign: 'right',
                                 fontWeight: 700,
                                 color: 'var(--color-text)',
                                 borderBottom: 'none'
                             }}>
-                                Total × 100 =
+                                Total × 100 (Skor SAW) =
                             </td>
                             <td style={{
                                 ...cellStyle,

@@ -291,9 +291,9 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <GradeBar label="Platinum" count={stats?.platinum || 0} total={totalGraded} color="#818cf8" />
-                        <GradeBar label="Gold" count={stats?.gold || 0} total={totalGraded} color="#f59e0b" />
+                        <GradeBar label="Gold" count={stats?.gold || 0} total={totalGraded} color="#eab308" />
                         <GradeBar label="Silver" count={stats?.silver || 0} total={totalGraded} color="#94a3b8" />
-                        <GradeBar label="Bronze" count={stats?.bronze || 0} total={totalGraded} color="#cd7f32" />
+                        <GradeBar label="Bronze" count={stats?.bronze || 0} total={totalGraded} color="#b45309" />
                     </div>
 
                 </motion.div>
@@ -434,7 +434,7 @@ export default function DashboardPage() {
                                 Belum ada data sapi.
                             </div>
                         ) : topSapi.map((s, i) => {
-                            const gradeColor = s.grade === 'Platinum' ? '#818cf8' : s.grade === 'Gold' ? '#f59e0b' : '#94a3b8';
+                            const gradeColor = s.grade === 'Platinum' ? '#818cf8' : s.grade === 'Gold' ? '#eab308' : s.grade === 'Bronze' ? '#b45309' : '#94a3b8';
                             return (
                                 <div key={s.id} style={{
                                     padding: '10px 20px',

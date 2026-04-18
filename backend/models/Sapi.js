@@ -35,7 +35,7 @@ module.exports = (sequelize) => {
             }
         },
         // ==============================
-        // KRITERIA SAW (Skor 1-5)
+        // KRITERIA SAW (C1: 1-5, C2-C6: 1-8)
         // ==============================
         c1_bobot: {
             type: DataTypes.INTEGER,
@@ -52,7 +52,7 @@ module.exports = (sequelize) => {
             comment: 'Body Condition Score',
             validate: {
                 min: { args: [1], msg: 'Skor C2 minimal 1.' },
-                max: { args: [5], msg: 'Skor C2 maksimal 5.' }
+                max: { args: [8], msg: 'Skor C2 maksimal 8.' }
             }
         },
         c3_postur: {
@@ -61,7 +61,7 @@ module.exports = (sequelize) => {
             comment: 'Konformasi & Postur',
             validate: {
                 min: { args: [1], msg: 'Skor C3 minimal 1.' },
-                max: { args: [5], msg: 'Skor C3 maksimal 5.' }
+                max: { args: [8], msg: 'Skor C3 maksimal 8.' }
             }
         },
         c4_vitalitas: {
@@ -70,7 +70,7 @@ module.exports = (sequelize) => {
             comment: 'Vitalitas & Kesehatan',
             validate: {
                 min: { args: [1], msg: 'Skor C4 minimal 1.' },
-                max: { args: [5], msg: 'Skor C4 maksimal 5.' }
+                max: { args: [8], msg: 'Skor C4 maksimal 8.' }
             }
         },
         c5_kaki: {
@@ -79,7 +79,7 @@ module.exports = (sequelize) => {
             comment: 'Kekokohan Kaki',
             validate: {
                 min: { args: [1], msg: 'Skor C5 minimal 1.' },
-                max: { args: [5], msg: 'Skor C5 maksimal 5.' }
+                max: { args: [8], msg: 'Skor C5 maksimal 8.' }
             }
         },
         c6_temperamen: {
@@ -88,7 +88,7 @@ module.exports = (sequelize) => {
             comment: 'Temperamen',
             validate: {
                 min: { args: [1], msg: 'Skor C6 minimal 1.' },
-                max: { args: [5], msg: 'Skor C6 maksimal 5.' }
+                max: { args: [8], msg: 'Skor C6 maksimal 8.' }
             }
         },
         // ==============================
@@ -98,31 +98,31 @@ module.exports = (sequelize) => {
             type: DataTypes.JSON,
             allowNull: true,
             defaultValue: null,
-            comment: 'Checklist BCS [bool,bool,bool,bool]'
+            comment: 'Checklist BCS [bool×7]'
         },
         c3_checklist: {
             type: DataTypes.JSON,
             allowNull: true,
             defaultValue: null,
-            comment: 'Checklist Postur [bool,bool,bool,bool]'
+            comment: 'Checklist Postur [bool×7]'
         },
         c4_checklist: {
             type: DataTypes.JSON,
             allowNull: true,
             defaultValue: null,
-            comment: 'Checklist Vitalitas [bool,bool,bool,bool]'
+            comment: 'Checklist Vitalitas [bool×7]'
         },
         c5_checklist: {
             type: DataTypes.JSON,
             allowNull: true,
             defaultValue: null,
-            comment: 'Checklist Kaki [bool,bool,bool,bool]'
+            comment: 'Checklist Kaki [bool×7]'
         },
         c6_checklist: {
             type: DataTypes.JSON,
             allowNull: true,
             defaultValue: null,
-            comment: 'Checklist Temperamen [bool,bool,bool,bool]'
+            comment: 'Checklist Temperamen [bool×7]'
         },
         // ==============================
         // HASIL PERHITUNGAN SAW

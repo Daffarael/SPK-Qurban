@@ -47,12 +47,12 @@
   /* Grade Colors */
   --color-platinum: #818cf8;
   --color-platinum-bg: #eef2ff;
-  --color-gold: #f59e0b;
-  --color-gold-bg: #fffbeb;
+  --color-gold: #eab308;
+  --color-gold-bg: #fefce8;
   --color-silver: #64748b;
   --color-silver-bg: #f1f5f9;
-  --color-bronze: #cd7f32;
-  --color-bronze-bg: #fef7ed;
+  --color-bronze: #b45309;
+  --color-bronze-bg: #fff7ed;
 
   /* Status */
   --color-success: #10b981;
@@ -88,9 +88,9 @@
   --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
 
   --color-platinum-bg: #312e81;
-  --color-gold-bg: #451a03;
+  --color-gold-bg: #422006;
   --color-silver-bg: #334155;
-  --color-bronze-bg: #451a03;
+  --color-bronze-bg: #7c2d12;
 }
 
 /* ============================================
@@ -228,6 +228,17 @@ body::-webkit-scrollbar,
   animation: pulse-soft 1.5s ease-in-out infinite;
   background: var(--color-border-light);
   border-radius: var(--radius-md);
+}
+
+/* Smooth trailing hover for table rows */
+.sapi-row {
+  transition: background-color 0.6s ease-out, box-shadow 0.6s ease-out;
+}
+
+.sapi-row:hover {
+  background-color: rgba(14, 165, 233, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.08);
+  transition: background-color 0.08s ease, box-shadow 0.08s ease;
 }
 
 /* ============================================
