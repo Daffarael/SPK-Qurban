@@ -30,16 +30,37 @@ const gradeColor = {
 };
 
 export default function DaftarSapiPage() {
-    const [daftarSapi, setDaftarSapi] = useState([]);
     const [semuaSapi, setSemuaSapi] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSapi, setSelectedSapi] = useState(null);
     const [showSAW, setShowSAW] = useState(false);
     const [detailSapi, setDetailSapi] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
+    const [daftarJenisSapi, setDaftarJenisSapi] = useState([]);
+    const [filterJenis, setFilterJenis] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('adminSapi_filterJenis') || '';
+        }
+        return '';
+    });
+
+    // Simpan filter ke localStorage setiap berubah
+    useEffect(() => {
+        if (filterJenis) {
+            localStorage.setItem('adminSapi_filterJenis', filterJenis);
+        }
+    }, [filterJenis]);
 
     useEffect(() => {
         fetchSapi();
+        api.get('/jenis-sapi').then(res => {
+            const jenisList = res.data.data || [];
+            setDaftarJenisSapi(jenisList);
+            // Auto-select hanya jika belum ada filter tersimpan
+            if (jenisList.length > 0 && !filterJenis) {
+                setFilterJenis(jenisList[0].id.toString());
+            }
+        }).catch(() => {});
     }, []);
 
     const fetchSapi = async () => {
@@ -47,13 +68,15 @@ export default function DaftarSapiPage() {
             const res = await api.get('/sapi');
             const semua = res.data.data || [];
             setSemuaSapi(semua);
-            setDaftarSapi(semua);
         } catch (err) {
             toast.error('Gagal mengambil data sapi.');
         } finally {
             setLoading(false);
         }
     };
+
+    // Filter sapi berdasarkan jenis yang dipilih (selalu berkelompok per jenis)
+    const daftarSapi = semuaSapi.filter(s => s.jenis_sapi_id && s.jenis_sapi_id.toString() === filterJenis);
 
     const handleDelete = async (id, kode) => {
         if (!confirm(`Hapus sapi ${kode}? Data tidak bisa dikembalikan.`)) return;
@@ -119,6 +142,41 @@ export default function DaftarSapiPage() {
                     </Link>
                 </motion.div>
             </motion.div>
+
+            {/* Filter Tabs Per Jenis */}
+            {daftarJenisSapi.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    gap: '6px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap'
+                }}>
+
+                    {daftarJenisSapi.map(j => {
+                        const count = semuaSapi.filter(s => s.jenis_sapi_id === j.id).length;
+                        const isActive = filterJenis === j.id.toString();
+                        return (
+                            <button
+                                key={j.id}
+                                onClick={() => setFilterJenis(j.id.toString())}
+                                style={{
+                                    padding: '6px 14px',
+                                    borderRadius: '999px',
+                                    border: `1px solid ${isActive ? 'var(--color-primary-500)' : 'var(--color-border)'}`,
+                                    backgroundColor: isActive ? 'var(--color-primary-500)' : 'transparent',
+                                    color: isActive ? 'white' : 'var(--color-text-secondary)',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
+                                }}
+                            >
+                                {j.nama} ({count})
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {daftarSapi.length === 0 ? (
                 <motion.div
@@ -419,7 +477,7 @@ export default function DaftarSapiPage() {
                 </motion.div>
             )}
 
-            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} semuaSapi={semuaSapi} />
+            <ModalDetailSAW isOpen={showSAW} onClose={() => setShowSAW(false)} sapi={selectedSapi} semuaSapi={daftarSapi} />
             <ModalDetailSapi isOpen={showDetail} onClose={() => setShowDetail(false)} sapi={detailSapi} />
         </div>
     );

@@ -47,12 +47,14 @@
   /* Grade Colors */
   --color-platinum: #818cf8;
   --color-platinum-bg: #eef2ff;
-  --color-gold: #eab308;
+  --color-gold: #ca8a04;
   --color-gold-bg: #fefce8;
-  --color-silver: #64748b;
-  --color-silver-bg: #f1f5f9;
-  --color-bronze: #b45309;
-  --color-bronze-bg: #fff7ed;
+  --color-silver: #475569;
+  --color-silver-bg: #e8edf5;
+  --color-silver-accent: #94a3b8;
+  --color-bronze: #92400e;
+  --color-bronze-bg: #fdf0e0;
+  --color-bronze-accent: #d97706;
 
   /* Status */
   --color-success: #10b981;
@@ -89,8 +91,12 @@
 
   --color-platinum-bg: #312e81;
   --color-gold-bg: #422006;
-  --color-silver-bg: #334155;
-  --color-bronze-bg: #7c2d12;
+  --color-silver: #94a3b8;
+  --color-silver-bg: #1e293b;
+  --color-silver-accent: #64748b;
+  --color-bronze: #d97706;
+  --color-bronze-bg: #2d1a06;
+  --color-bronze-accent: #92400e;
 }
 
 /* ============================================

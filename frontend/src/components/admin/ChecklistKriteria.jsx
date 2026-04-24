@@ -10,22 +10,40 @@ const DESKRIPSI_SKOR = {
     5: 'Cukup Baik',
     6: 'Baik',
     7: 'Sangat Baik',
-    8: 'Sempurna'
+    8: 'Sempurna',
+    9: 'Sempurna',
+    10: 'Sempurna'
 };
+
+/**
+ * Mendapatkan deskripsi skor secara dinamis berdasarkan persentase
+ */
+function getDeskripsiSkor(skor, maxSkor) {
+    const persen = maxSkor > 0 ? skor / maxSkor : 0;
+    if (persen >= 0.95) return 'Sempurna';
+    if (persen >= 0.85) return 'Sangat Baik';
+    if (persen >= 0.7) return 'Baik';
+    if (persen >= 0.55) return 'Cukup Baik';
+    if (persen >= 0.4) return 'Cukup';
+    if (persen >= 0.25) return 'Kurang';
+    if (persen >= 0.15) return 'Buruk';
+    return 'Sangat Buruk';
+}
 
 /**
  * ChecklistKriteria — Smart Checklist UI (Card-based toggles)
  * 
  * Props:
  * - label: string — judul kriteria
- * - items: string[] — 7 pernyataan checkbox
+ * - items: string[] — pernyataan checkbox (jumlah dinamis)
  * - checked: boolean[] — status checked [true, false, ...]
  * - onChange: (newChecked: boolean[]) => void
  * - skorTersimpan: number|null — skor lama untuk info saat edit
  */
 export default function ChecklistKriteria({ label, items, checked, onChange, skorTersimpan = null }) {
     const jumlahChecked = checked.filter(Boolean).length;
-    const skor = jumlahChecked + 1; // 0→1, 1→2, ... 7→8
+    const maxSkor = items.length + 1; // jumlah items + 1
+    const skor = jumlahChecked + 1; // 0→1, 1→2, ...
 
     const handleToggle = (index) => {
         const newChecked = [...checked];
@@ -77,7 +95,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
                         minWidth: '42px',
                         justifyContent: 'center'
                     }}>
-                        {skor}/8
+                        {skor}/{maxSkor}
                     </span>
                     <span style={{
                         fontSize: '11px',
@@ -87,7 +105,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
                         borderRadius: 'var(--radius-sm)',
                         fontWeight: 500
                     }}>
-                        {DESKRIPSI_SKOR[skor]}
+                        {getDeskripsiSkor(skor, maxSkor)}
                     </span>
                 </div>
             </div>
@@ -107,7 +125,7 @@ export default function ChecklistKriteria({ label, items, checked, onChange, sko
                     gap: '6px'
                 }}>
                     <span style={{ fontSize: '14px' }}>ℹ️</span>
-                    Skor tersimpan sebelumnya: <strong>{skorTersimpan}/8</strong>
+                    Skor tersimpan sebelumnya: <strong>{skorTersimpan}/{maxSkor}</strong>
                     {jumlahChecked === 0 && ' — Ceklis ulang untuk memperbarui.'}
                 </div>
             )}

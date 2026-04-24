@@ -31,7 +31,12 @@ function hitungMaxValues(semuaSapi) {
 export default function ModalDetailSAW({ isOpen, onClose, sapi, semuaSapi }) {
     if (!sapi) return null;
 
-    const maxValues = hitungMaxValues(semuaSapi);
+    // Filter hanya sapi sejenis untuk perhitungan max (karena ranking per jenis)
+    const sapiSejenis = sapi.jenis_sapi_id
+        ? (semuaSapi || []).filter(s => s.jenis_sapi_id === sapi.jenis_sapi_id)
+        : semuaSapi;
+
+    const maxValues = hitungMaxValues(sapiSejenis);
 
     const kriteria = [
         { kode: 'C1', nilai: sapi.c1_bobot, max: maxValues.c1, ...BOBOT.C1 },

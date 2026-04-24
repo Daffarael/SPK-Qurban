@@ -27,6 +27,7 @@ db.Admin = require('./Admin')(sequelize);
 db.Sapi = require('./Sapi')(sequelize);
 db.Pemesanan = require('./Pemesanan')(sequelize);
 db.JenisSapi = require('./JenisSapi')(sequelize);
+db.KriteriaTemplate = require('./KriteriaTemplate')(sequelize);
 
 // ========================
 // RELASI ANTAR MODEL
@@ -52,6 +53,18 @@ db.JenisSapi.hasMany(db.Sapi, {
 
 // Sapi milik satu JenisSapi
 db.Sapi.belongsTo(db.JenisSapi, {
+  foreignKey: 'jenis_sapi_id',
+  as: 'jenisSapi'
+});
+
+// JenisSapi memiliki banyak KriteriaTemplate
+db.JenisSapi.hasMany(db.KriteriaTemplate, {
+  foreignKey: 'jenis_sapi_id',
+  as: 'kriteriaTemplates'
+});
+
+// KriteriaTemplate milik satu JenisSapi
+db.KriteriaTemplate.belongsTo(db.JenisSapi, {
   foreignKey: 'jenis_sapi_id',
   as: 'jenisSapi'
 });

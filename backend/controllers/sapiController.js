@@ -17,38 +17,50 @@ const Sapi = db.Sapi;
 /**
  * Hitung ulang skor SAW untuk SEMUA sapi dalam database.
  * Dipanggil setiap kali ada create, update, atau delete sapi.
- * Karena normalisasi SAW menggunakan max dari data,
- * perubahan 1 sapi bisa mempengaruhi skor semua sapi lainnya.
+ * 
+ * PENTING: Ranking dihitung PER JENIS SAPI.
+ * Limousin vs Limousin, Simental vs Simental, dst.
+ * Karena normalisasi SAW menggunakan max dari data sejenis,
+ * perubahan 1 sapi bisa mempengaruhi skor sapi sejenis lainnya.
  */
 async function recalculateAllSapi() {
     const allSapi = await Sapi.findAll();
 
     if (allSapi.length === 0) return;
 
-    // Siapkan data untuk batch calculation
-    const daftarSapi = allSapi.map(s => ({
-        id: s.id,
-        c1: s.c1_bobot,
-        c2: s.c2_bcs,
-        c3: s.c3_postur,
-        c4: s.c4_vitalitas,
-        c5: s.c5_kaki,
-        c6: s.c6_temperamen
-    }));
+    // Group sapi berdasarkan jenis_sapi_id
+    const grouped = {};
+    for (const s of allSapi) {
+        const key = s.jenis_sapi_id || 'tanpa_jenis';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(s);
+    }
 
-    // Hitung SAW batch (normalisasi dinamis)
-    const { hasil } = hitungSAWBatch(daftarSapi);
+    // Hitung SAW per kelompok jenis
+    for (const [jenisId, sapiList] of Object.entries(grouped)) {
+        const daftarSapi = sapiList.map(s => ({
+            id: s.id,
+            c1: s.c1_bobot,
+            c2: s.c2_bcs,
+            c3: s.c3_postur,
+            c4: s.c4_vitalitas,
+            c5: s.c5_kaki,
+            c6: s.c6_temperamen
+        }));
 
-    // Update setiap sapi dengan skor baru
-    for (let i = 0; i < allSapi.length; i++) {
-        const sapiData = allSapi[i];
-        const hasilSapi = hasil.find(h => h.id === sapiData.id);
+        // Hitung SAW batch per kelompok (max values relatif per jenis)
+        const { hasil } = hitungSAWBatch(daftarSapi);
 
-        if (hasilSapi) {
-            await sapiData.update({
-                skor_saw: hasilSapi.skor_saw,
-                grade: hasilSapi.grade
-            });
+        // Update setiap sapi dengan skor baru
+        for (const sapiData of sapiList) {
+            const hasilSapi = hasil.find(h => h.id === sapiData.id);
+
+            if (hasilSapi) {
+                await sapiData.update({
+                    skor_saw: hasilSapi.skor_saw,
+                    grade: hasilSapi.grade
+                });
+            }
         }
     }
 }
@@ -63,7 +75,7 @@ async function recalculateAllSapi() {
  */
 async function getPublikSapi(req, res, next) {
     try {
-        const { berat_min, harga_max, grade } = req.query;
+        const { berat_min, harga_max, grade, jenis_sapi_id } = req.query;
 
         const where = {
             status: 'Available'
@@ -78,6 +90,9 @@ async function getPublikSapi(req, res, next) {
         }
         if (grade) {
             where.grade = grade;
+        }
+        if (jenis_sapi_id) {
+            where.jenis_sapi_id = parseInt(jenis_sapi_id);
         }
 
         const daftarSapi = await Sapi.findAll({
@@ -128,7 +143,15 @@ async function getPublikSapiById(req, res, next) {
  */
 async function getAllSapi(req, res, next) {
     try {
+        const { jenis_sapi_id } = req.query;
+        const where = {};
+
+        if (jenis_sapi_id) {
+            where.jenis_sapi_id = parseInt(jenis_sapi_id);
+        }
+
         const daftarSapi = await Sapi.findAll({
+            where,
             order: [['skor_saw', 'DESC'], ['berat_kg', 'DESC']],
             include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
         });
@@ -166,6 +189,10 @@ async function createSapi(req, res, next) {
             return gagal(res, 'Kode sapi, berat, dan harga wajib diisi.', 400);
         }
 
+        if (!jenis_sapi_id) {
+            return gagal(res, 'Jenis sapi wajib dipilih.', 400);
+        }
+
         if (!c2_bcs || !c3_postur || !c4_vitalitas || !c5_kaki || !c6_temperamen) {
             return gagal(res, 'Semua kriteria (C2-C6) wajib diisi.', 400);
         }
@@ -198,7 +225,7 @@ async function createSapi(req, res, next) {
             c5_checklist: parseChecklist(c5_checklist),
             c6_checklist: parseChecklist(c6_checklist),
             foto_url: req.file ? `/uploads/${req.file.filename}` : null,
-            jenis_sapi_id: jenis_sapi_id ? parseInt(jenis_sapi_id) : null
+            jenis_sapi_id: parseInt(jenis_sapi_id)
         };
 
         const sapi = await Sapi.create(dataSapi);

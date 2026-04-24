@@ -17,14 +17,15 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
         ? `${BACKEND_URL}${sapi.foto_url}`
         : null;
 
-    // Top 3 rank colors
-    const rankStyle = rank === 1
-        ? { bg: '#fffbeb', color: '#b45309', border: '#fde68a' }
-        : rank === 2
-        ? { bg: '#f8fafc', color: '#64748b', border: '#e2e8f0' }
-        : rank === 3
-        ? { bg: '#fef3c7', color: '#92400e', border: '#fde68a' }
-        : null;
+    // Rank badge — clean & minimal
+    const getRankBadge = (r) => {
+        if (r === 1) return { bg: '#f59e0b', color: '#fff', text: '#1' };
+        if (r === 2) return { bg: '#94a3b8', color: '#fff', text: '#2' };
+        if (r === 3) return { bg: '#cd7c3a', color: '#fff', text: '#3' };
+        return { bg: 'rgba(15,23,42,0.55)', color: '#e2e8f0', text: `#${r}` };
+    };
+
+    const rankBadge = getRankBadge(rank);
 
     return (
         <motion.div
@@ -75,48 +76,24 @@ function KartuSapi({ sapi, rank, delay = 0 }) {
                             </div>
                         )}
 
-                        {/* Rank Badge — overlay on image */}
-                        {rankStyle ? (
-                            <div style={{
-                                position: 'absolute',
-                                top: '10px',
-                                left: '10px',
-                                backgroundColor: rankStyle.bg,
-                                color: rankStyle.color,
-                                border: `1.5px solid ${rankStyle.border}`,
-                                borderRadius: '8px',
-                                padding: '3px 10px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                letterSpacing: '0.3px',
-                                backdropFilter: 'blur(6px)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                            }}>
-                                <span style={{ fontSize: '11px', opacity: 0.6 }}>#</span>{rank}
-                            </div>
-                        ) : (
-                            <div style={{
-                                position: 'absolute',
-                                top: '10px',
-                                left: '10px',
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '8px',
-                                backgroundColor: 'rgba(255,255,255,0.85)',
-                                backdropFilter: 'blur(6px)',
-                                color: 'var(--color-text-secondary)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                border: '1px solid rgba(0,0,0,0.06)'
-                            }}>
-                                {rank}
-                            </div>
-                        )}
+                        {/* Rank Badge */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            backgroundColor: rankBadge.bg,
+                            color: rankBadge.color,
+                            borderRadius: '6px',
+                            padding: '3px 9px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '0.5px',
+                            backdropFilter: 'blur(6px)',
+                            WebkitBackdropFilter: 'blur(6px)',
+                        }}>
+                            {rankBadge.text}
+                        </div>
+
 
                         {/* Grade badge on image */}
                         <div style={{
@@ -232,7 +209,7 @@ export default function KatalogPage() {
     const [daftarSapi, setDaftarSapi] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterGrade, setFilterGrade] = useState('Semua');
-    const [filterJenis, setFilterJenis] = useState('Semua');
+    const [filterJenis, setFilterJenis] = useState('');
     const [sortBy, setSortBy] = useState('skor');
 
     // Range filter states
@@ -268,34 +245,39 @@ export default function KatalogPage() {
         };
     }, [daftarSapi]);
 
-    // Initialize ranges once data loads
+    // Initialize ranges + auto-select jenis pertama once data loads
     useEffect(() => {
         if (daftarSapi.length > 0 && !rangeInitialized) {
             setRangeHarga([bounds.hargaMin, bounds.hargaMax]);
             setRangeSkor([bounds.skorMin, bounds.skorMax]);
             setRangeInitialized(true);
+
+            // Auto-select jenis sapi pertama jika belum dipilih
+            if (!filterJenis) {
+                const jenisSet = Array.from(new Set(daftarSapi.filter(s => s.jenisSapi).map(s => s.jenisSapi.nama)));
+                if (jenisSet.length > 0) setFilterJenis(jenisSet[0]);
+            }
         }
     }, [daftarSapi, bounds, rangeInitialized]);
 
     const grades = ['Semua', 'Platinum', 'Gold', 'Silver', 'Bronze'];
 
-    // Get unique jenis sapi from data
-    const jenisOptions = ['Semua', ...Array.from(
+    // Get unique jenis sapi from data (tanpa opsi 'Semua' — harus selalu per jenis)
+    const jenisOptions = Array.from(
         new Set(daftarSapi.filter(s => s.jenisSapi).map(s => s.jenisSapi.nama))
-    )];
+    );
 
     // Check if range filters are active (not at full bounds)
     const isHargaFiltered = rangeInitialized && (rangeHarga[0] !== bounds.hargaMin || rangeHarga[1] !== bounds.hargaMax);
     const isSkorFiltered = rangeInitialized && (rangeSkor[0] !== bounds.skorMin || rangeSkor[1] !== bounds.skorMax);
 
-    // Apply filters
+    // Apply filters (jenis sapi selalu aktif — ranking per jenis)
     let filtered = daftarSapi;
     if (filterGrade !== 'Semua') {
         filtered = filtered.filter(s => s.grade === filterGrade);
     }
-    if (filterJenis !== 'Semua') {
-        filtered = filtered.filter(s => s.jenisSapi && s.jenisSapi.nama === filterJenis);
-    }
+    // Selalu filter per jenis sapi
+    filtered = filtered.filter(s => s.jenisSapi && s.jenisSapi.nama === filterJenis);
     if (isHargaFiltered) {
         filtered = filtered.filter(s => {
             const h = parseFloat(s.harga);
@@ -399,7 +381,7 @@ export default function KatalogPage() {
                     {/* Row 2: Jenis Sapi + Sort */}
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                         {/* Jenis Sapi Filter */}
-                        {jenisOptions.length > 2 && (
+                        {jenisOptions.length > 0 && (
                             <div style={{ flex: 1, minWidth: '200px' }}>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '8px', letterSpacing: '0.5px' }}>
                                     JENIS SAPI
@@ -422,7 +404,7 @@ export default function KatalogPage() {
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
-                                            {j === 'Semua' ? '🏷️ Semua Jenis' : j}
+                                            {j}
                                         </button>
                                     ))}
                                 </div>

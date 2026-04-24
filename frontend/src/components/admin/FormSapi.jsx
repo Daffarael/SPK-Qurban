@@ -74,7 +74,10 @@ export default function FormSapi({ mode = 'tambah' }) {
     const [daftarJenisSapi, setDaftarJenisSapi] = useState([]);
     const [semuaSapi, setSemuaSapi] = useState([]);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [kriteriaTemplates, setKriteriaTemplates] = useState([]);
+    const [loadingKriteria, setLoadingKriteria] = useState(false);
     const dropdownRef = useRef(null);
+    const skipKriteriaFetch = useRef(false);
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -94,13 +97,13 @@ export default function FormSapi({ mode = 'tambah' }) {
         jenis_sapi_id: ''
     });
 
-    // Checklist state: 5 kriteria × 7 pernyataan
+    // Checklist state: dinamis berdasarkan jenis sapi
     const [checklist, setChecklist] = useState({
-        c2: [false, false, false, false, false, false, false],
-        c3: [false, false, false, false, false, false, false],
-        c4: [false, false, false, false, false, false, false],
-        c5: [false, false, false, false, false, false, false],
-        c6: [false, false, false, false, false, false, false]
+        c2: [],
+        c3: [],
+        c4: [],
+        c5: [],
+        c6: []
     });
 
     // Skor tersimpan (untuk info di mode edit, data lama tanpa checklist)
@@ -108,54 +111,40 @@ export default function FormSapi({ mode = 'tambah' }) {
         c2: null, c3: null, c4: null, c5: null, c6: null
     });
 
-    // Definisi pernyataan checklist
-    const CHECKLIST_ITEMS = {
-        c2: [
-            'Tulang rusuk tidak terlihat/teraba',
-            'Pangkal ekor tertutup lemak tebal',
-            'Leher terlihat penuh dan tebal',
-            'Daging paha membulat penuh',
-            'Perut tidak terlalu buncit/kembung (proporsional)',
-            'Area punuk (hump) berisi dan tidak kendur',
-            'Lapisan lemak bawah kulit teraba merata di seluruh badan'
-        ],
-        c3: [
-            'Punggung lurus sempurna (tidak melengkung/bengkok)',
-            'Dada terlihat dalam dan lebar',
-            'Tanduk utuh dan simetris',
-            'Postur badan panjang dan proporsional (berbentuk balok)',
-            'Kepala proporsional dengan ukuran badan',
-            'Leher kokoh dan menyatu baik dengan bahu',
-            'Pinggul lebar dan simetris (tidak miring)'
-        ],
-        c4: [
-            'Mata bening, bersinar, dan tidak berair/belekan',
-            'Napas teratur (tidak ngos-ngosan saat cuaca normal)',
-            'Area anus dan pencernaan bersih (tidak mencret)',
-            'Bulu mengkilap, kulit lentur, bebas kutu/jamur',
-            'Hidung lembab dan bersih (tidak ada lendir berlebihan)',
-            'Gusi dan selaput lendir berwarna merah muda sehat',
-            'Nafsu makan aktif dan gerakan mengunyah (ruminansi) terlihat normal'
-        ],
-        c5: [
-            'Keempat kaki tegak lurus sempurna (tidak bentuk X atau O)',
-            'Kuku utuh, keras, dan tidak ada infeksi/pembengkakan',
-            'Langkah berjalan mantap (tidak diseret/pincang)',
-            'Berdiri kokoh (kaki tidak gemetar saat menopang badan)',
-            'Persendian lutut dan tumit tidak bengkak/meradang',
-            'Telapak kuku rata dan tidak tumbuh berlebihan',
-            'Mampu berdiri dan duduk dengan gerakan yang mudah dan lancar'
-        ],
-        c6: [
-            'Tenang saat didekati banyak orang',
-            'Kepala mudah dikendalikan saat dipegang tali keluhnya',
-            'Tidak sering menghentakkan kaki ke tanah',
-            'Tidak menunjukkan gestur agresif/menyeruduk',
-            'Tidak gelisah berlebihan saat diperiksa/disentuh',
-            'Tetap tenang saat lingkungan ramai atau berisik',
-            'Mudah digiring/dipindahkan tanpa perlawanan berarti'
-        ]
-    };
+    // Fetch kriteria templates saat jenis sapi berubah
+    useEffect(() => {
+        if (skipKriteriaFetch.current) {
+            skipKriteriaFetch.current = false;
+            return;
+        }
+        if (!form.jenis_sapi_id) {
+            setKriteriaTemplates([]);
+            setChecklist({ c2: [], c3: [], c4: [], c5: [], c6: [] });
+            return;
+        }
+        setLoadingKriteria(true);
+        api.get(`/jenis-sapi/${form.jenis_sapi_id}`)
+            .then(res => {
+                const templates = res.data.data.kriteriaTemplates || [];
+                setKriteriaTemplates(templates);
+                // Reset checklist sesuai jumlah item baru
+                const newChecklist = { c2: [], c3: [], c4: [], c5: [], c6: [] };
+                templates.forEach(t => {
+                    newChecklist[t.kode_kriteria] = new Array(t.items.length).fill(false);
+                });
+                setChecklist(newChecklist);
+            })
+            .catch(() => {
+                toast.error('Gagal memuat kriteria untuk jenis sapi ini.');
+            })
+            .finally(() => setLoadingKriteria(false));
+    }, [form.jenis_sapi_id]);
+
+    // Build CHECKLIST_ITEMS dari kriteriaTemplates
+    const CHECKLIST_ITEMS = {};
+    kriteriaTemplates.forEach(t => {
+        CHECKLIST_ITEMS[t.kode_kriteria] = t.items;
+    });
 
     // Hitung skor dari checklist: count(true) + 1
     const getSkorFromChecklist = (arr) => arr.filter(Boolean).length + 1;
@@ -183,6 +172,18 @@ export default function FormSapi({ mode = 'tambah' }) {
             const res = await api.get('/sapi');
             const sapi = res.data.data.find(s => s.id === parseInt(params.id));
             if (sapi) {
+                // Load kriteria templates jika punya jenis sapi
+                if (sapi.jenis_sapi_id) {
+                    try {
+                        const jenisRes = await api.get(`/jenis-sapi/${sapi.jenis_sapi_id}`);
+                        const templates = jenisRes.data.data.kriteriaTemplates || [];
+                        setKriteriaTemplates(templates);
+                    } catch {}
+                }
+
+                // Skip the useEffect fetch triggered by setting jenis_sapi_id
+                skipKriteriaFetch.current = true;
+
                 setForm({
                     kode_sapi: sapi.kode_sapi,
                     berat_kg: sapi.berat_kg.toString(),
@@ -224,14 +225,18 @@ export default function FormSapi({ mode = 'tambah' }) {
         }
     };
 
-    // Preview SAW real-time (skor dari checklist + max dinamis)
+    // Preview SAW real-time (skor dari checklist + max dinamis PER JENIS)
     const berat = parseInt(form.berat_kg) || 0;
     const skorC2 = getSkorFromChecklist(checklist.c2);
     const skorC3 = getSkorFromChecklist(checklist.c3);
     const skorC4 = getSkorFromChecklist(checklist.c4);
     const skorC5 = getSkorFromChecklist(checklist.c5);
     const skorC6 = getSkorFromChecklist(checklist.c6);
-    const preview = hitungPreviewSAW(berat, skorC2, skorC3, skorC4, skorC5, skorC6, semuaSapi, params?.id);
+    // Filter hanya sapi sejenis untuk preview ranking yang akurat
+    const sapiSejenis = form.jenis_sapi_id
+        ? semuaSapi.filter(s => s.jenis_sapi_id && s.jenis_sapi_id.toString() === form.jenis_sapi_id.toString())
+        : semuaSapi;
+    const preview = hitungPreviewSAW(berat, skorC2, skorC3, skorC4, skorC5, skorC6, sapiSejenis, params?.id);
 
     const processFile = (file) => {
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -301,7 +306,7 @@ export default function FormSapi({ mode = 'tambah' }) {
             formData.append('c4_checklist', JSON.stringify(checklist.c4));
             formData.append('c5_checklist', JSON.stringify(checklist.c5));
             formData.append('c6_checklist', JSON.stringify(checklist.c6));
-            if (form.jenis_sapi_id) formData.append('jenis_sapi_id', form.jenis_sapi_id);
+            formData.append('jenis_sapi_id', form.jenis_sapi_id);
             if (fotoFile) formData.append('foto', fotoFile);
 
             if (mode === 'edit') {
@@ -418,7 +423,7 @@ export default function FormSapi({ mode = 'tambah' }) {
 
                             {/* Jenis Sapi - Custom Dropdown */}
                             <div style={{ marginTop: '16px' }}>
-                                <label style={labelStyle}>Jenis Sapi</label>
+                                <label style={labelStyle}>Jenis Sapi *</label>
                                 <div ref={dropdownRef} style={{ position: 'relative' }}>
                                     {/* Trigger Button */}
                                     <button
@@ -561,41 +566,51 @@ export default function FormSapi({ mode = 'tambah' }) {
                                 Ceklis Kondisi Fisik Sapi
                             </h2>
 
-                            <ChecklistKriteria
-                                label="C2 — Body Condition Score (Kepadatan Daging)"
-                                items={CHECKLIST_ITEMS.c2}
-                                checked={checklist.c2}
-                                onChange={(v) => setChecklist({ ...checklist, c2: v })}
-                                skorTersimpan={skorTersimpan.c2}
-                            />
-                            <ChecklistKriteria
-                                label="C3 — Konformasi & Postur Tubuh"
-                                items={CHECKLIST_ITEMS.c3}
-                                checked={checklist.c3}
-                                onChange={(v) => setChecklist({ ...checklist, c3: v })}
-                                skorTersimpan={skorTersimpan.c3}
-                            />
-                            <ChecklistKriteria
-                                label="C4 — Vitalitas & Kesehatan Klinis"
-                                items={CHECKLIST_ITEMS.c4}
-                                checked={checklist.c4}
-                                onChange={(v) => setChecklist({ ...checklist, c4: v })}
-                                skorTersimpan={skorTersimpan.c4}
-                            />
-                            <ChecklistKriteria
-                                label="C5 — Kekokohan Kaki & Kuku"
-                                items={CHECKLIST_ITEMS.c5}
-                                checked={checklist.c5}
-                                onChange={(v) => setChecklist({ ...checklist, c5: v })}
-                                skorTersimpan={skorTersimpan.c5}
-                            />
-                            <ChecklistKriteria
-                                label="C6 — Temperamen / Karakter Perilaku"
-                                items={CHECKLIST_ITEMS.c6}
-                                checked={checklist.c6}
-                                onChange={(v) => setChecklist({ ...checklist, c6: v })}
-                                skorTersimpan={skorTersimpan.c6}
-                            />
+                            {!form.jenis_sapi_id ? (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '40px 20px',
+                                    color: 'var(--color-text-muted)',
+                                    backgroundColor: 'var(--color-bg-secondary)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px dashed var(--color-border)'
+                                }}>
+                                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐄</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 500 }}>Pilih jenis sapi terlebih dahulu</div>
+                                    <div style={{ fontSize: '12px', marginTop: '4px' }}>Checklist akan muncul sesuai jenis sapi yang dipilih.</div>
+                                </div>
+                            ) : loadingKriteria ? (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '30px',
+                                    color: 'var(--color-text-muted)'
+                                }}>
+                                    Memuat kriteria...
+                                </div>
+                            ) : kriteriaTemplates.length === 0 ? (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '30px',
+                                    color: 'var(--color-warning)',
+                                    backgroundColor: '#fef3c7',
+                                    borderRadius: 'var(--radius-md)'
+                                }}>
+                                    ⚠️ Jenis sapi ini belum memiliki kriteria. Tambahkan kriteria di halaman Jenis Sapi.
+                                </div>
+                            ) : (
+                                <>
+                                    {kriteriaTemplates.map(t => (
+                                        <ChecklistKriteria
+                                            key={t.kode_kriteria}
+                                            label={`${t.kode_kriteria.toUpperCase()} — ${t.label}`}
+                                            items={t.items}
+                                            checked={checklist[t.kode_kriteria] || []}
+                                            onChange={(v) => setChecklist({ ...checklist, [t.kode_kriteria]: v })}
+                                            skorTersimpan={skorTersimpan[t.kode_kriteria]}
+                                        />
+                                    ))}
+                                </>
+                            )}
                         </div>
 
                         {/* Foto */}
