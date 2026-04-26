@@ -9,12 +9,13 @@ const { getSkorBobot, hitungSAWBatch } = require('../utils/perhitunganSAW');
 
 // ═══════════════════════════════════════════
 // DATA SAPI — 20 per jenis, realistic & varied
+// ID akan diambil dari database secara dinamis
 // ═══════════════════════════════════════════
 
-const JENIS = {
-    BRAHMAN: 12,
-    LIMOUSIN: 10,
-    SIMENTAL: 11
+let JENIS = {
+    BRAHMAN: null,
+    LIMOUSIN: null,
+    SIMENTAL: null
 };
 
 // Helper: generate checklist array (true/false randomly based on target score)
@@ -110,6 +111,21 @@ async function main() {
     try {
         await db.sequelize.authenticate();
         console.log('✅ Database terhubung.\n');
+
+        // Ambil ID jenis sapi dari database secara dinamis
+        const jenisLimousin = await db.JenisSapi.findOne({ where: { nama: 'Limousin' } });
+        const jenisBrahman = await db.JenisSapi.findOne({ where: { nama: 'Brahman' } });
+        const jenisSimental = await db.JenisSapi.findOne({ where: { nama: 'Simental' } });
+
+        if (!jenisLimousin || !jenisBrahman || !jenisSimental) {
+            console.error('❌ Jenis sapi belum ada! Jalankan "npm run seed" dulu.');
+            process.exit(1);
+        }
+
+        JENIS.LIMOUSIN = jenisLimousin.id;
+        JENIS.BRAHMAN = jenisBrahman.id;
+        JENIS.SIMENTAL = jenisSimental.id;
+        console.log(`📋 ID Jenis Sapi: Limousin=${JENIS.LIMOUSIN}, Brahman=${JENIS.BRAHMAN}, Simental=${JENIS.SIMENTAL}\n`);
 
         // Hapus data sapi lama (opsional — komentar jika tidak mau)
         const existingCount = await db.Sapi.count();
