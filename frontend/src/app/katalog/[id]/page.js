@@ -27,6 +27,8 @@ export default function DetailSapiPage() {
     const [loading, setLoading] = useState(true);
     const [showPesan, setShowPesan] = useState(false);
     const [formPesan, setFormPesan] = useState({ nama_pelanggan: '', no_wa: '' });
+    const [metodePembayaran, setMetodePembayaran] = useState('');
+    const [step, setStep] = useState(1); // 1: form data, 2: pilih metode
     const [loadingPesan, setLoadingPesan] = useState(false);
 
     useEffect(() => {
@@ -45,25 +47,70 @@ export default function DetailSapiPage() {
         }
     };
 
-    const handlePesan = async (e) => {
+    const handleNextStep = (e) => {
         e.preventDefault();
+        if (!formPesan.nama_pelanggan.trim() || !formPesan.no_wa.trim()) {
+            toast.error('Nama dan nomor WA wajib diisi.');
+            return;
+        }
+        setStep(2);
+    };
+
+    const handlePesan = async () => {
+        if (!metodePembayaran) {
+            toast.error('Pilih metode pembayaran.');
+            return;
+        }
         setLoadingPesan(true);
         try {
             const res = await api.post('/pemesanan', {
                 sapi_id: sapi.id,
                 nama_pelanggan: formPesan.nama_pelanggan,
-                no_wa: formPesan.no_wa
+                no_wa: formPesan.no_wa,
+                metode_pembayaran: metodePembayaran
             });
-            const kode = res.data.data.pemesanan.kode_pemesanan;
 
-            // Simpan kode ke localStorage agar user tidak lupa
+            const data = res.data.data;
+            const kode = data.pemesanan.kode_pemesanan;
+
+            // Simpan kode ke localStorage
             try {
                 const saved = JSON.parse(localStorage.getItem('riwayat_pemesanan') || '[]');
                 saved.unshift({ kode, tanggal: new Date().toISOString() });
-                localStorage.setItem('riwayat_pemesanan', JSON.stringify(saved.slice(0, 10))); // max 10
+                localStorage.setItem('riwayat_pemesanan', JSON.stringify(saved.slice(0, 10)));
             } catch (e) { }
 
-            router.push(`/pemesanan-sukses?kode=${kode}`);
+            // FLOW MIDTRANS: buka Snap popup
+            if (metodePembayaran === 'midtrans' && data.snap_token) {
+                if (window.snap) {
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: async () => {
+                            // Konfirmasi ke backend → kirim WA notif
+                            try {
+                                await api.post('/pemesanan/konfirmasi-pembayaran', { kode_pemesanan: kode });
+                            } catch (e) { console.error('Konfirmasi error:', e); }
+                            router.push(`/pemesanan-sukses?kode=${kode}&metode=midtrans`);
+                        },
+                        onPending: () => {
+                            router.push(`/pemesanan-sukses?kode=${kode}&metode=midtrans&pending=1`);
+                        },
+                        onError: () => {
+                            toast.error('Pembayaran gagal. Silakan coba lagi.');
+                        },
+                        onClose: () => {
+                            toast('Pembayaran belum selesai. Anda bisa melanjutkan dari halaman Cek Pemesanan.', { icon: '⚠️' });
+                            router.push(`/pemesanan-sukses?kode=${kode}&metode=midtrans&pending=1`);
+                        }
+                    });
+                } else {
+                    toast.error('Midtrans belum siap. Refresh halaman dan coba lagi.');
+                }
+                setLoadingPesan(false);
+                return;
+            }
+
+            // FLOW BAYAR DI TEMPAT: langsung ke sukses
+            router.push(`/pemesanan-sukses?kode=${kode}&metode=ditempat`);
         } catch (err) {
             toast.error(err.response?.data?.message || 'Gagal membuat pemesanan.');
         } finally {
@@ -71,9 +118,13 @@ export default function DetailSapiPage() {
         }
     };
 
-    const fotoUrl = sapi?.foto_url
-        ? `${BACKEND_URL}${sapi.foto_url}`
-        : null;
+    const resetModal = () => {
+        setShowPesan(false);
+        setStep(1);
+        setMetodePembayaran('');
+    };
+
+    const fotoUrl = sapi?.foto_url ? `${BACKEND_URL}${sapi.foto_url}` : null;
 
     if (loading) return (
         <>
@@ -176,15 +227,9 @@ export default function DetailSapiPage() {
                                 border: '1px solid var(--color-border-light)'
                             }}
                         >
-                            <h3 style={{
-                                fontSize: '16px',
-                                fontWeight: 700,
-                                color: 'var(--color-text)',
-                                marginBottom: '20px'
-                            }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)', marginBottom: '20px' }}>
                                 Penilaian Kualitas
                             </h3>
-
                             {KRITERIA_LABELS.map((k, i) => {
                                 const nilai = sapi[k.key];
                                 return (
@@ -194,41 +239,25 @@ export default function DetailSapiPage() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.2 + i * 0.06 }}
                                         style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '14px',
+                                            display: 'flex', alignItems: 'center', gap: '14px',
                                             padding: '12px 0',
                                             borderBottom: i < KRITERIA_LABELS.length - 1 ? '1px solid var(--color-border-light)' : 'none'
                                         }}
                                     >
                                         <span style={{ fontSize: '22px' }}>{k.icon}</span>
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>
-                                                {k.nama}
-                                            </div>
-                                            <div style={{
-                                                marginTop: '6px',
-                                                display: 'flex',
-                                                gap: '3px'
-                                            }}>
+                                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)' }}>{k.nama}</div>
+                                            <div style={{ marginTop: '6px', display: 'flex', gap: '3px' }}>
                                                 {[1, 2, 3, 4, 5].map(n => (
                                                     <div key={n} style={{
-                                                        width: '100%',
-                                                        height: '6px',
-                                                        borderRadius: '999px',
+                                                        width: '100%', height: '6px', borderRadius: '999px',
                                                         backgroundColor: n <= nilai ? 'var(--color-primary-500)' : 'var(--color-border-light)',
                                                         transition: 'all 0.3s ease'
                                                     }} />
                                                 ))}
                                             </div>
                                         </div>
-                                        <span style={{
-                                            fontSize: '16px',
-                                            fontWeight: 700,
-                                            color: 'var(--color-primary-500)',
-                                            minWidth: '32px',
-                                            textAlign: 'right'
-                                        }}>
+                                        <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-primary-500)', minWidth: '32px', textAlign: 'right' }}>
                                             {nilai}/5
                                         </span>
                                     </motion.div>
@@ -251,118 +280,58 @@ export default function DetailSapiPage() {
                             border: '1px solid var(--color-border-light)',
                             boxShadow: 'var(--shadow-md)'
                         }}>
-                            {/* Kode & Grade */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '16px'
-                            }}>
-                                <h1 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text)' }}>
-                                    {sapi.kode_sapi}
-                                </h1>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <h1 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text)' }}>{sapi.kode_sapi}</h1>
                                 <BadgeGrade grade={sapi.grade} />
                             </div>
 
-                            {/* Jenis Sapi */}
                             {sapi.jenisSapi && (
                                 <div style={{
-                                    display: 'inline-block',
-                                    padding: '5px 14px',
-                                    borderRadius: '999px',
-                                    backgroundColor: 'var(--color-primary-50)',
-                                    color: 'var(--color-primary-700)',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    marginBottom: '16px',
+                                    display: 'inline-block', padding: '5px 14px', borderRadius: '999px',
+                                    backgroundColor: 'var(--color-primary-50)', color: 'var(--color-primary-700)',
+                                    fontSize: '13px', fontWeight: 600, marginBottom: '16px',
                                     border: '1px solid var(--color-primary-100)'
                                 }}>
                                     🏷️ {sapi.jenisSapi.nama}
                                 </div>
                             )}
 
-                            {/* SAW Score */}
                             <div style={{
-                                textAlign: 'center',
-                                padding: '20px',
-                                backgroundColor: 'var(--color-bg-secondary)',
-                                borderRadius: 'var(--radius-lg)',
-                                marginBottom: '20px'
+                                textAlign: 'center', padding: '20px',
+                                backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-lg)', marginBottom: '20px'
                             }}>
-                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: '4px' }}>
-                                    SKOR KUALITAS
-                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, marginBottom: '4px' }}>SKOR KUALITAS</div>
                                 <div style={{
-                                    fontSize: '42px',
-                                    fontWeight: 800,
+                                    fontSize: '42px', fontWeight: 800,
                                     background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700))',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    lineHeight: 1
-                                }}>
-                                    {sapi.skor_saw}
-                                </div>
-                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                                    dari 100
-                                </div>
+                                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1
+                                }}>{sapi.skor_saw}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>dari 100</div>
                             </div>
 
-                            {/* Details */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '12px',
-                                marginBottom: '12px'
-                            }}>
-                                <div style={{
-                                    padding: '14px',
-                                    backgroundColor: 'var(--color-bg-secondary)',
-                                    borderRadius: 'var(--radius-md)',
-                                    textAlign: 'center'
-                                }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                                <div style={{ padding: '14px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>Berat</div>
-                                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)' }}>
-                                        {sapi.berat_kg} kg
-                                    </div>
+                                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)' }}>{sapi.berat_kg} kg</div>
                                 </div>
-                                <div style={{
-                                    padding: '14px',
-                                    backgroundColor: 'var(--color-bg-secondary)',
-                                    borderRadius: 'var(--radius-md)',
-                                    textAlign: 'center'
-                                }}>
+                                <div style={{ padding: '14px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>Harga</div>
-                                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)' }}>
-                                        Rp {parseFloat(sapi.harga).toLocaleString('id-ID')}
-                                    </div>
+                                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)' }}>Rp {parseFloat(sapi.harga).toLocaleString('id-ID')}</div>
                                 </div>
                             </div>
 
-                            {/* Jenis Sapi Info Box */}
                             {sapi.jenisSapi && (
-                                <div style={{
-                                    padding: '14px',
-                                    backgroundColor: 'var(--color-bg-secondary)',
-                                    borderRadius: 'var(--radius-md)',
-                                    marginBottom: '20px'
-                                }}>
+                                <div style={{ padding: '14px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', marginBottom: '20px' }}>
                                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>Jenis/Ras Sapi</div>
-                                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>
-                                        {sapi.jenisSapi.nama}
-                                    </div>
+                                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>{sapi.jenisSapi.nama}</div>
                                 </div>
                             )}
 
-                            {/* Status */}
                             {sapi.status !== 'Available' ? (
                                 <div style={{
-                                    padding: '14px',
-                                    borderRadius: 'var(--radius-md)',
-                                    backgroundColor: '#fef3c7',
-                                    color: '#92400e',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    textAlign: 'center'
+                                    padding: '14px', borderRadius: 'var(--radius-md)',
+                                    backgroundColor: '#fef3c7', color: '#92400e',
+                                    fontSize: '13px', fontWeight: 600, textAlign: 'center'
                                 }}>
                                     ⚠️ Sapi ini sedang {sapi.status === 'Booked' ? 'dipesan' : 'terjual'}
                                 </div>
@@ -370,17 +339,11 @@ export default function DetailSapiPage() {
                                 <button
                                     onClick={() => setShowPesan(true)}
                                     style={{
-                                        width: '100%',
-                                        padding: '14px',
-                                        borderRadius: 'var(--radius-md)',
+                                        width: '100%', padding: '14px', borderRadius: 'var(--radius-md)',
                                         border: 'none',
                                         background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
-                                        color: 'white',
-                                        fontSize: '15px',
-                                        fontWeight: 700,
-                                        cursor: 'pointer',
-                                        boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)',
-                                        transition: 'all 0.2s ease'
+                                        color: 'white', fontSize: '15px', fontWeight: 700, cursor: 'pointer',
+                                        boxShadow: '0 4px 14px rgba(14, 165, 233, 0.35)', transition: 'all 0.2s ease'
                                     }}
                                 >
                                     Pesan Sekarang
@@ -393,62 +356,118 @@ export default function DetailSapiPage() {
             <Footer />
 
             {/* Modal Pemesanan */}
-            <Modal judul="Form Pemesanan" isOpen={showPesan} onClose={() => setShowPesan(false)} lebar="420px">
-                <div style={{
-                    padding: '8px 0 0',
-                    fontSize: '13px',
-                    color: 'var(--color-text-secondary)',
-                    marginBottom: '20px'
-                }}>
-                    Anda akan memesan <strong>{sapi.kode_sapi}</strong> ({sapi.grade}).
-                    Pemesanan berlaku <strong>48 jam</strong>.
-                </div>
+            <Modal judul={step === 1 ? 'Form Pemesanan' : 'Pilih Metode Pembayaran'} isOpen={showPesan} onClose={resetModal} lebar="450px">
+                {step === 1 ? (
+                    <>
+                        <div style={{ padding: '8px 0 0', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
+                            Anda akan memesan <strong>{sapi.kode_sapi}</strong> ({sapi.grade}).
+                        </div>
+                        <form onSubmit={handleNextStep}>
+                            <div style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                                    Nama Lengkap *
+                                </label>
+                                <input type="text" value={formPesan.nama_pelanggan}
+                                    onChange={(e) => setFormPesan({ ...formPesan, nama_pelanggan: e.target.value })}
+                                    placeholder="Masukkan nama lengkap" required style={inputStyle} />
+                            </div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
+                                    Nomor WhatsApp *
+                                </label>
+                                <input type="text" value={formPesan.no_wa}
+                                    onChange={(e) => setFormPesan({ ...formPesan, no_wa: e.target.value })}
+                                    placeholder="628xxxxxxxxxx" required style={inputStyle} />
+                            </div>
+                            <button type="submit" style={{
+                                width: '100%', padding: '12px', borderRadius: 'var(--radius-md)',
+                                border: 'none', backgroundColor: 'var(--color-primary-500)',
+                                color: 'white', fontSize: '14px', fontWeight: 600, cursor: 'pointer'
+                            }}>
+                                Lanjutkan →
+                            </button>
+                        </form>
+                    </>
+                ) : (
+                    <>
+                        <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
+                            Halo <strong>{formPesan.nama_pelanggan}</strong>, pilih cara pembayaran:
+                        </div>
 
-                <form onSubmit={handlePesan}>
-                    <div style={{ marginBottom: '14px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
-                            Nama Lengkap *
-                        </label>
-                        <input
-                            type="text"
-                            value={formPesan.nama_pelanggan}
-                            onChange={(e) => setFormPesan({ ...formPesan, nama_pelanggan: e.target.value })}
-                            placeholder="Masukkan nama lengkap"
-                            required
-                            style={inputStyle}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '6px' }}>
-                            Nomor WhatsApp *
-                        </label>
-                        <input
-                            type="text"
-                            value={formPesan.no_wa}
-                            onChange={(e) => setFormPesan({ ...formPesan, no_wa: e.target.value })}
-                            placeholder="628xxxxxxxxxx"
-                            required
-                            style={inputStyle}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={loadingPesan}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            borderRadius: 'var(--radius-md)',
-                            border: 'none',
-                            backgroundColor: loadingPesan ? 'var(--color-primary-300)' : 'var(--color-primary-500)',
-                            color: 'white',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            cursor: loadingPesan ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {loadingPesan ? 'Memproses...' : 'Konfirmasi Pemesanan'}
-                    </button>
-                </form>
+                        {/* Opsi Bayar Online */}
+                        <div
+                            onClick={() => setMetodePembayaran('midtrans')}
+                            style={{
+                                padding: '18px',
+                                borderRadius: 'var(--radius-lg)',
+                                border: `2px solid ${metodePembayaran === 'midtrans' ? 'var(--color-primary-500)' : 'var(--color-border)'}`,
+                                backgroundColor: metodePembayaran === 'midtrans' ? 'var(--color-primary-50)' : 'var(--color-bg-card)',
+                                cursor: 'pointer',
+                                marginBottom: '12px',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '28px' }}>💳</span>
+                                <div>
+                                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>Bayar Online</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>VA, QRIS, e-Wallet, Kartu Kredit</div>
+                                </div>
+                                {metodePembayaran === 'midtrans' && (
+                                    <span style={{ marginLeft: 'auto', fontSize: '20px', color: 'var(--color-primary-500)' }}>✓</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Opsi Bayar di Tempat */}
+                        <div
+                            onClick={() => setMetodePembayaran('ditempat')}
+                            style={{
+                                padding: '18px',
+                                borderRadius: 'var(--radius-lg)',
+                                border: `2px solid ${metodePembayaran === 'ditempat' ? 'var(--color-primary-500)' : 'var(--color-border)'}`,
+                                backgroundColor: metodePembayaran === 'ditempat' ? 'var(--color-primary-50)' : 'var(--color-bg-card)',
+                                cursor: 'pointer',
+                                marginBottom: '20px',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '28px' }}>🏪</span>
+                                <div>
+                                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>Bayar di Tempat</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>Datang ke peternakan dalam 48 jam</div>
+                                </div>
+                                {metodePembayaran === 'ditempat' && (
+                                    <span style={{ marginLeft: 'auto', fontSize: '20px', color: 'var(--color-primary-500)' }}>✓</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={() => setStep(1)} style={{
+                                flex: 1, padding: '12px', borderRadius: 'var(--radius-md)',
+                                border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)',
+                                color: 'var(--color-text)', fontSize: '14px', fontWeight: 600, cursor: 'pointer'
+                            }}>
+                                ← Kembali
+                            </button>
+                            <button
+                                onClick={handlePesan}
+                                disabled={!metodePembayaran || loadingPesan}
+                                style={{
+                                    flex: 2, padding: '12px', borderRadius: 'var(--radius-md)',
+                                    border: 'none',
+                                    backgroundColor: !metodePembayaran || loadingPesan ? 'var(--color-primary-300)' : 'var(--color-primary-500)',
+                                    color: 'white', fontSize: '14px', fontWeight: 600,
+                                    cursor: !metodePembayaran || loadingPesan ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {loadingPesan ? 'Memproses...' : metodePembayaran === 'midtrans' ? '💳 Bayar Sekarang' : '📝 Konfirmasi Pesanan'}
+                            </button>
+                        </div>
+                    </>
+                )}
             </Modal>
         </>
     );

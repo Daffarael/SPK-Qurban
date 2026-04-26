@@ -77,6 +77,7 @@ export default function CekPemesananPage() {
     };
 
     const statusConfig = {
+        'Menunggu Pembayaran': { bg: '#dbeafe', color: '#2563eb', label: 'Menunggu Pembayaran', icon: '💳' },
         Pending: { bg: '#fef3c7', color: '#d97706', label: 'Menunggu Konfirmasi', icon: '⏳' },
         Confirmed: { bg: '#dcfce7', color: '#16a34a', label: 'Dikonfirmasi', icon: '✅' },
         Cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Dibatalkan', icon: '❌' },
@@ -369,6 +370,14 @@ export default function CekPemesananPage() {
                                                     }
                                                 </div>
                                             </div>
+                                            {item.metode_pembayaran && (
+                                                <div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>Metode</div>
+                                                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)' }}>
+                                                        {item.metode_pembayaran === 'midtrans' ? '💳 Online' : '🏪 Di Tempat'}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {sapi && (
@@ -394,7 +403,7 @@ export default function CekPemesananPage() {
                                             </div>
                                         )}
 
-                                        {item.status === 'Pending' && item.kadaluarsa_pada && (
+                                        {['Pending', 'Menunggu Pembayaran'].includes(item.status) && item.kadaluarsa_pada && (
                                             <div style={{
                                                 marginTop: '12px',
                                                 padding: '10px 14px',

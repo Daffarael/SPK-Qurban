@@ -1,6 +1,7 @@
 /**
  * Lazy Check - Kadaluarsa Pemesanan
  * Cek & update pemesanan yang sudah lewat 48 jam
+ * Juga cek pemesanan Midtrans yang menunggu pembayaran terlalu lama
  */
 
 const { Op } = require('sequelize');
@@ -15,10 +16,12 @@ async function cekDanExpirePemesanan(db) {
     try {
         const sekarang = new Date();
 
-        // Cari semua pemesanan Pending yang sudah kadaluarsa
+        // Cari semua pemesanan Pending/Menunggu Pembayaran yang sudah kadaluarsa
         const pemesananKadaluarsa = await db.Pemesanan.findAll({
             where: {
-                status: 'Pending',
+                status: {
+                    [Op.in]: ['Pending', 'Menunggu Pembayaran']
+                },
                 kadaluarsa_pada: {
                     [Op.lt]: sekarang
                 }
@@ -42,6 +45,10 @@ async function cekDanExpirePemesanan(db) {
 
             console.log(`  → Pemesanan ${pemesanan.kode_pemesanan} expired. Sapi ID ${pemesanan.sapi_id} kembali Available.`);
         }
+
+        // Recalculate SAW setelah sapi kembali Available
+        const { recalculateAllSapi } = require('../controllers/sapiController');
+        await recalculateAllSapi();
     } catch (error) {
         console.error('❌ Error saat cek kadaluarsa:', error.message);
     }

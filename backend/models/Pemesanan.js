@@ -38,6 +38,24 @@ module.exports = (sequelize) => {
                 notEmpty: { msg: 'Nomor WhatsApp tidak boleh kosong.' }
             }
         },
+        metode_pembayaran: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: 'ditempat',
+            validate: {
+                isIn: {
+                    args: [['midtrans', 'ditempat']],
+                    msg: 'Metode pembayaran harus midtrans atau ditempat.'
+                }
+            },
+            comment: 'midtrans atau ditempat'
+        },
+        midtrans_order_id: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Order ID di Midtrans'
+        },
         tanggal_pemesanan: {
             type: DataTypes.DATE,
             allowNull: false,
@@ -49,13 +67,13 @@ module.exports = (sequelize) => {
             comment: 'tanggal_pemesanan + 48 jam'
         },
         status: {
-            type: DataTypes.STRING(15),
+            type: DataTypes.STRING(25),
             allowNull: false,
             defaultValue: 'Pending',
             validate: {
                 isIn: {
-                    args: [['Pending', 'Confirmed', 'Cancelled', 'Expired']],
-                    msg: 'Status harus Pending, Confirmed, Cancelled, atau Expired.'
+                    args: [['Pending', 'Menunggu Pembayaran', 'Confirmed', 'Cancelled', 'Expired']],
+                    msg: 'Status harus Pending, Menunggu Pembayaran, Confirmed, Cancelled, atau Expired.'
                 }
             }
         }

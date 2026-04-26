@@ -24,7 +24,8 @@ const Sapi = db.Sapi;
  * perubahan 1 sapi bisa mempengaruhi skor sapi sejenis lainnya.
  */
 async function recalculateAllSapi() {
-    const allSapi = await Sapi.findAll();
+    // Hanya hitung sapi Available (Booked/Sold keluar dari normalisasi)
+    const allSapi = await Sapi.findAll({ where: { status: 'Available' } });
 
     if (allSapi.length === 0) return;
 
@@ -144,7 +145,9 @@ async function getPublikSapiById(req, res, next) {
 async function getAllSapi(req, res, next) {
     try {
         const { jenis_sapi_id } = req.query;
-        const where = {};
+        const where = {
+            status: 'Available' // Hanya tampilkan sapi yang tersedia (bukan Booked/Sold)
+        };
 
         if (jenis_sapi_id) {
             where.jenis_sapi_id = parseInt(jenis_sapi_id);
@@ -357,6 +360,7 @@ async function deleteSapi(req, res, next) {
 }
 
 module.exports = {
+    recalculateAllSapi,
     getPublikSapi,
     getPublikSapiById,
     getAllSapi,

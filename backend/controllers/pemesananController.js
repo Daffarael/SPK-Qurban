@@ -1,9 +1,18 @@
 /**
- * Pemesanan Controller - Booking + Lookup + Status Management
+ * Pemesanan Controller - Booking + Midtrans + WhatsApp + Admin
  */
 
 const db = require('../models');
 const { sukses, gagal } = require('../utils/formatResponse');
+const { recalculateAllSapi } = require('./sapiController');
+const { buatTransaksiSnap, verifikasiSignature } = require('../utils/midtransService');
+const {
+    kirimPesanWA,
+    templateBayarOnlineBerhasil,
+    templateBayarDiTempat,
+    templateKonfirmasiAdmin,
+    templatePesananBatal
+} = require('../utils/fonnteService');
 
 const Pemesanan = db.Pemesanan;
 const Sapi = db.Sapi;
@@ -34,19 +43,25 @@ async function generateKodePemesanan() {
 
 /**
  * POST /api/pemesanan
- * Guest checkout: buat pemesanan baru
+ * Guest checkout: buat pemesanan baru (Midtrans atau Bayar di Tempat)
  */
 async function buatPemesanan(req, res, next) {
     try {
-        const { sapi_id, nama_pelanggan, no_wa } = req.body;
+        const { sapi_id, nama_pelanggan, no_wa, metode_pembayaran } = req.body;
 
         // Validasi input
         if (!sapi_id || !nama_pelanggan || !no_wa) {
             return gagal(res, 'Sapi ID, nama pelanggan, dan nomor WA wajib diisi.', 400);
         }
 
+        if (!metode_pembayaran || !['midtrans', 'ditempat'].includes(metode_pembayaran)) {
+            return gagal(res, 'Metode pembayaran harus midtrans atau ditempat.', 400);
+        }
+
         // Cek sapi ada & available
-        const sapi = await Sapi.findByPk(sapi_id);
+        const sapi = await Sapi.findByPk(sapi_id, {
+            include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
+        });
 
         if (!sapi) {
             return gagal(res, 'Sapi tidak ditemukan.', 404);
@@ -62,25 +77,33 @@ async function buatPemesanan(req, res, next) {
         const jamKadaluarsa = parseInt(process.env.BOOKING_EXPIRY_HOURS) || 48;
         const kadaluarsaPada = new Date(sekarang.getTime() + jamKadaluarsa * 60 * 60 * 1000);
 
+        // Tentukan status awal
+        const statusAwal = metode_pembayaran === 'midtrans' ? 'Menunggu Pembayaran' : 'Pending';
+
         // Buat pemesanan
         const pemesanan = await Pemesanan.create({
             kode_pemesanan: kodePemesanan,
             sapi_id: sapi.id,
             nama_pelanggan,
             no_wa,
+            metode_pembayaran,
+            midtrans_order_id: metode_pembayaran === 'midtrans' ? kodePemesanan : null,
             tanggal_pemesanan: sekarang,
             kadaluarsa_pada: kadaluarsaPada,
-            status: 'Pending'
+            status: statusAwal
         });
 
-        // Update status sapi → Booked
+        // Update status sapi → Booked + recalculate SAW
         await sapi.update({ status: 'Booked' });
+        await recalculateAllSapi();
 
-        return sukses(res, 'Pemesanan berhasil dibuat.', {
+        // Response data
+        const responseData = {
             pemesanan: {
                 kode_pemesanan: pemesanan.kode_pemesanan,
                 nama_pelanggan: pemesanan.nama_pelanggan,
                 no_wa: pemesanan.no_wa,
+                metode_pembayaran: pemesanan.metode_pembayaran,
                 tanggal_pemesanan: pemesanan.tanggal_pemesanan,
                 kadaluarsa_pada: pemesanan.kadaluarsa_pada,
                 status: pemesanan.status
@@ -93,9 +116,130 @@ async function buatPemesanan(req, res, next) {
                 grade: sapi.grade,
                 skor_saw: sapi.skor_saw
             }
-        }, 201);
+        };
+
+        // === FLOW: MIDTRANS ===
+        if (metode_pembayaran === 'midtrans') {
+            try {
+                const snapResult = await buatTransaksiSnap(
+                    kodePemesanan,
+                    parseFloat(sapi.harga),
+                    { nama: nama_pelanggan, no_wa }
+                );
+
+                responseData.snap_token = snapResult.token;
+                responseData.snap_redirect_url = snapResult.redirect_url;
+            } catch (midtransErr) {
+                // Rollback: hapus pemesanan & kembalikan status sapi
+                await pemesanan.destroy();
+                await sapi.update({ status: 'Available' });
+                return gagal(res, `Gagal membuat transaksi pembayaran: ${midtransErr.message}`, 500);
+            }
+
+            return sukses(res, 'Pemesanan dibuat. Silakan lanjutkan pembayaran.', responseData, 201);
+        }
+
+        // === FLOW: BAYAR DI TEMPAT ===
+        // Kirim WA notifikasi
+        const jenisNama = sapi.jenisSapi?.nama || '';
+        const pesanWA = templateBayarDiTempat(
+            nama_pelanggan,
+            kodePemesanan,
+            sapi.kode_sapi + (jenisNama ? ` - ${jenisNama}` : ''),
+            sapi.grade,
+            sapi.berat_kg,
+            sapi.harga
+        );
+        kirimPesanWA(no_wa, pesanWA).catch(err => console.error('WA error:', err));
+
+        return sukses(res, 'Pemesanan berhasil dibuat.', responseData, 201);
     } catch (error) {
         next(error);
+    }
+}
+
+/**
+ * POST /api/pemesanan/midtrans-webhook
+ * Webhook dari Midtrans — update status otomatis
+ */
+async function handleMidtransWebhook(req, res, next) {
+    try {
+        const notification = req.body;
+        console.log('📩 Midtrans webhook received:', notification.order_id, notification.transaction_status);
+
+        // Verifikasi signature
+        if (!verifikasiSignature(notification)) {
+            console.warn('⚠️ Signature Midtrans tidak valid!');
+            return res.status(403).json({ message: 'Invalid signature' });
+        }
+
+        const { order_id, transaction_status, fraud_status } = notification;
+
+        // Cari pemesanan
+        const pemesanan = await Pemesanan.findOne({
+            where: { kode_pemesanan: order_id },
+            include: [{
+                model: Sapi,
+                as: 'sapi',
+                include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
+            }]
+        });
+
+        if (!pemesanan) {
+            console.warn('⚠️ Pemesanan tidak ditemukan:', order_id);
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Jangan proses ulang jika sudah final
+        if (['Confirmed', 'Cancelled', 'Expired'].includes(pemesanan.status)) {
+            return res.status(200).json({ message: 'Already processed' });
+        }
+
+        const sapi = pemesanan.sapi;
+
+        // Handle berdasarkan transaction_status
+        if (transaction_status === 'capture' || transaction_status === 'settlement') {
+            // Pembayaran berhasil
+            if (transaction_status === 'capture' && fraud_status !== 'accept') {
+                // Fraud detected — cancel
+                await pemesanan.update({ status: 'Cancelled' });
+                if (sapi) await sapi.update({ status: 'Available' });
+                return res.status(200).json({ message: 'Fraud detected, cancelled' });
+            }
+
+            await pemesanan.update({ status: 'Confirmed' });
+            if (sapi) await sapi.update({ status: 'Sold' });
+            await recalculateAllSapi();
+
+            // Kirim WA: pembayaran berhasil
+            const jenisNama = sapi?.jenisSapi?.nama || '';
+            const pesanWA = templateBayarOnlineBerhasil(
+                pemesanan.nama_pelanggan,
+                pemesanan.kode_pemesanan,
+                sapi.kode_sapi + (jenisNama ? ` - ${jenisNama}` : ''),
+                sapi.grade,
+                sapi.berat_kg,
+                sapi.harga
+            );
+            kirimPesanWA(pemesanan.no_wa, pesanWA).catch(err => console.error('WA error:', err));
+
+            console.log(`✅ Pemesanan ${order_id} → Confirmed. Sapi → Sold.`);
+        } else if (['cancel', 'deny', 'expire'].includes(transaction_status)) {
+            // Pembayaran gagal/expired
+            await pemesanan.update({ status: 'Cancelled' });
+            if (sapi) await sapi.update({ status: 'Available' });
+            await recalculateAllSapi();
+
+            console.log(`❌ Pemesanan ${order_id} → Cancelled (${transaction_status}).`);
+        } else if (transaction_status === 'pending') {
+            // Masih pending — tidak perlu action
+            console.log(`⏳ Pemesanan ${order_id} masih pending di Midtrans.`);
+        }
+
+        return res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        console.error('❌ Error webhook Midtrans:', error.message);
+        return res.status(500).json({ message: 'Internal error' });
     }
 }
 
@@ -131,10 +275,11 @@ async function cekPemesanan(req, res, next) {
                 kode_pemesanan: pemesanan.kode_pemesanan,
                 nama_pelanggan: pemesanan.nama_pelanggan,
                 no_wa: pemesanan.no_wa,
+                metode_pembayaran: pemesanan.metode_pembayaran,
                 tanggal_pemesanan: pemesanan.tanggal_pemesanan,
                 kadaluarsa_pada: pemesanan.kadaluarsa_pada,
                 status: pemesanan.status,
-                sisa_waktu: pemesanan.status === 'Pending'
+                sisa_waktu: ['Pending', 'Menunggu Pembayaran'].includes(pemesanan.status)
                     ? `${sisaJam} jam ${sisaMenit} menit`
                     : null
             },
@@ -211,23 +356,34 @@ async function updateStatusPemesanan(req, res, next) {
             return gagal(res, 'Status harus Confirmed atau Cancelled.', 400);
         }
 
-        const pemesanan = await Pemesanan.findByPk(id);
+        const pemesanan = await Pemesanan.findByPk(id, {
+            include: [{
+                model: Sapi,
+                as: 'sapi',
+                include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
+            }]
+        });
 
         if (!pemesanan) {
             return gagal(res, 'Pemesanan tidak ditemukan.', 404);
         }
 
-        // Hanya Pending yang bisa di-update
-        if (pemesanan.status !== 'Pending') {
+        // Hanya Pending dan Menunggu Pembayaran yang bisa di-update
+        if (!['Pending', 'Menunggu Pembayaran'].includes(pemesanan.status)) {
             return gagal(res, `Pemesanan dengan status '${pemesanan.status}' tidak bisa diubah.`, 400);
         }
 
-        const sapi = await Sapi.findByPk(pemesanan.sapi_id);
+        const sapi = pemesanan.sapi;
 
         if (status === 'Confirmed') {
             // Confirmed → sapi jadi Sold (permanen)
             await pemesanan.update({ status: 'Confirmed' });
             if (sapi) await sapi.update({ status: 'Sold' });
+            await recalculateAllSapi();
+
+            // Kirim WA konfirmasi
+            const pesanWA = templateKonfirmasiAdmin(pemesanan.nama_pelanggan, pemesanan.kode_pemesanan);
+            kirimPesanWA(pemesanan.no_wa, pesanWA).catch(err => console.error('WA error:', err));
 
             return sukses(res, 'Pemesanan dikonfirmasi. Sapi berstatus Sold.', {
                 pemesanan_status: 'Confirmed',
@@ -239,6 +395,11 @@ async function updateStatusPemesanan(req, res, next) {
             // Cancelled → sapi kembali Available
             await pemesanan.update({ status: 'Cancelled' });
             if (sapi) await sapi.update({ status: 'Available' });
+            await recalculateAllSapi();
+
+            // Kirim WA pembatalan
+            const pesanWA = templatePesananBatal(pemesanan.nama_pelanggan, pemesanan.kode_pemesanan);
+            kirimPesanWA(pemesanan.no_wa, pesanWA).catch(err => console.error('WA error:', err));
 
             return sukses(res, 'Pemesanan dibatalkan. Sapi kembali tersedia.', {
                 pemesanan_status: 'Cancelled',
@@ -250,10 +411,103 @@ async function updateStatusPemesanan(req, res, next) {
     }
 }
 
+/**
+ * POST /api/pemesanan/:id/kirim-wa
+ * Admin kirim pesan WA manual ke customer
+ */
+async function kirimWAManual(req, res, next) {
+    try {
+        const { id } = req.params;
+        const { pesan } = req.body;
+
+        if (!pesan || !pesan.trim()) {
+            return gagal(res, 'Pesan tidak boleh kosong.', 400);
+        }
+
+        const pemesanan = await Pemesanan.findByPk(id);
+
+        if (!pemesanan) {
+            return gagal(res, 'Pemesanan tidak ditemukan.', 404);
+        }
+
+        const result = await kirimPesanWA(pemesanan.no_wa, pesan.trim());
+
+        return sukses(res, `Pesan WA berhasil dikirim ke ${pemesanan.no_wa}.`, {
+            no_wa: pemesanan.no_wa,
+            result
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * POST /api/pemesanan/konfirmasi-pembayaran
+ * Fallback: Frontend panggil ini setelah Midtrans Snap sukses
+ * (Karena webhook Midtrans tidak bisa ke localhost saat development)
+ */
+async function konfirmasiPembayaran(req, res, next) {
+    try {
+        const { kode_pemesanan } = req.body;
+
+        if (!kode_pemesanan) {
+            return gagal(res, 'Kode pemesanan wajib diisi.', 400);
+        }
+
+        const pemesanan = await Pemesanan.findOne({
+            where: { kode_pemesanan },
+            include: [{
+                model: Sapi,
+                as: 'sapi',
+                include: [{ model: db.JenisSapi, as: 'jenisSapi', attributes: ['id', 'nama'] }]
+            }]
+        });
+
+        if (!pemesanan) {
+            return gagal(res, 'Pemesanan tidak ditemukan.', 404);
+        }
+
+        // Hanya proses jika masih Menunggu Pembayaran
+        if (pemesanan.status !== 'Menunggu Pembayaran') {
+            return sukses(res, 'Pemesanan sudah diproses sebelumnya.', { status: pemesanan.status });
+        }
+
+        const sapi = pemesanan.sapi;
+
+        // Update status
+        await pemesanan.update({ status: 'Confirmed' });
+        if (sapi) await sapi.update({ status: 'Sold' });
+        await recalculateAllSapi();
+
+        // Kirim WA notifikasi
+        const jenisNama = sapi?.jenisSapi?.nama || '';
+        const pesanWA = templateBayarOnlineBerhasil(
+            pemesanan.nama_pelanggan,
+            pemesanan.kode_pemesanan,
+            sapi.kode_sapi + (jenisNama ? ` - ${jenisNama}` : ''),
+            sapi.grade,
+            sapi.berat_kg,
+            sapi.harga
+        );
+        kirimPesanWA(pemesanan.no_wa, pesanWA).catch(err => console.error('WA error:', err));
+
+        console.log(`✅ Pembayaran ${kode_pemesanan} dikonfirmasi via frontend callback.`);
+
+        return sukses(res, 'Pembayaran berhasil dikonfirmasi. Notifikasi WA dikirim.', {
+            status: 'Confirmed'
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     buatPemesanan,
+    handleMidtransWebhook,
+    konfirmasiPembayaran,
     cekPemesanan,
     cekPemesananByWA,
     getAllPemesanan,
-    updateStatusPemesanan
+    updateStatusPemesanan,
+    kirimWAManual
 };
