@@ -144,10 +144,13 @@ async function getPublikSapiById(req, res, next) {
  */
 async function getAllSapi(req, res, next) {
     try {
-        const { jenis_sapi_id } = req.query;
-        const where = {
-            status: 'Available' // Hanya tampilkan sapi yang tersedia (bukan Booked/Sold)
-        };
+        const { jenis_sapi_id, status } = req.query;
+        const where = {}; // Admin bisa lihat semua status (Available, Booked, Sold)
+
+        // Filter opsional berdasarkan status (jika admin mau filter manual)
+        if (status) {
+            where.status = status;
+        }
 
         if (jenis_sapi_id) {
             where.jenis_sapi_id = parseInt(jenis_sapi_id);
@@ -338,6 +341,22 @@ async function deleteSapi(req, res, next) {
 
         if (!sapi) {
             return gagal(res, 'Sapi tidak ditemukan.', 404);
+        }
+
+        // Cek apakah masih ada pemesanan aktif (Pending / Menunggu Pembayaran)
+        const pemesananAktif = await db.Pemesanan.count({
+            where: {
+                sapi_id: sapi.id,
+                status: { [db.Sequelize.Op.in]: ['Pending', 'Menunggu Pembayaran'] }
+            }
+        });
+
+        if (pemesananAktif > 0) {
+            return gagal(
+                res,
+                'Tidak bisa menghapus sapi. Masih ada pemesanan aktif yang terkait.',
+                400
+            );
         }
 
         // Hapus foto jika ada
